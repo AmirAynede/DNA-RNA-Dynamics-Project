@@ -1,34 +1,32 @@
+######               STEP 0              ###### PREPERATION(ENVIRONMENT SETTING)
+'''
 # As always, first set the working directory: 
 # for the project you need the one in which you have the "InputData" folder
 getwd()
 setwd("~/Dropbox/DRD_2025/Final_Report-20250521/")
-
+'''
 # Install necessary packages:
 
 library(minfi)
 library(minfiData)
 library(IlluminaHumanMethylation450kmanifest)
-#what library is this?
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(shinyMethyl)
 library(AnnotationDbi)
 library(sva)
-#install.packages("../../../Practical/L3/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
-#for favour's computer --- but we will need to generate this alone later
-load('~/Dropbox/DRD_2025/2/Illumina450Manifest_clean.RData')
+install.packages("./library/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
+
+load('./data/raw/Illumina450Manifest_clean.RData')
 
 ######     STEP ONE    ######
 ###### Import raw data ######
-######                 ######
-
 ###### List the files included in the folder ######
 
-list.files("Input_Data/")
+list.files("./data/raw/")
 
-# SAMPLE SHEET FILE NEEDS TO BE DESIGNED CORRECTLY IN ORDER TO BE ABLE TO LOAD IT: have a look at the csv
-
+#SAMPLE SHEET FILE NEEDS TO BE DESIGNED CORRECTLY IN ORDER TO BE ABLE TO LOAD IT: have a look at the csv
 #CORRECT SAMPLE SHEET FORMAT ==> REQUIRED COLUMNS: array and slide columns
-SampleSheet <- read.csv("Input_Data/SampleSheet_Report_II.csv",header=T)
+SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
 
 # sample of type of sample sheet that can actually be read by the loading function
 SampleSheet 
@@ -36,7 +34,7 @@ SampleSheet
 # LOADING FUNCTION
 # Set the directory in which the raw data are stored
 # load the samplesheet using the function read.metharray.sheet
-baseDir <- ("Input_data")
+baseDir <- ("./data/raw")
 # basedir arg combines array and sample name (slide) columns in the base name column
 targets <- read.metharray.sheet(baseDir) 
 # combines idat files that share name: 
@@ -52,11 +50,9 @@ save(RGset,file="RGset_Report.RData")
 # to access do not use @ but specific function found in the help page ?RGChannelSet
 RGset
 str(RGset)
-?RGChannelSet
 
 ######               STEP TWO              ######
 ###### Create the Red and Green dataframes ######
-######                                     ######
 
 # We extract the Green and Red Channels using the functions getGreen and getRed
 # extract fluorescence intensity info associated to red
@@ -68,7 +64,7 @@ Green <- data.frame(getGreen(RGset))
 dim(Green)
 head(Green)
 
-# why 622399 rows instead of 485k as expected? 
+# why 622399 rows instead of 485k as expected? (we should mention this in out manuscript)
 # We assign 2 ids for infinium I and 1 id for infinium II (2 + 1)
 
 ######               STEP THREE             ######
@@ -83,49 +79,49 @@ getManifestInfo(RGset)
 # What about the getProbeInfo() function? It returns a data.frame giving the type I, type II or control probes
 getProbeInfo(RGset)
 # Only the first and the last rows of the object are printed. We will create an object df containing the result of this function:
-ProbeInfo <- data.frame(getProbeInfo(RGset))
+ProbeInfo_I <- data.frame(getProbeInfo(RGset))
 # Strange...this df has XXXXXX rows, not 485512...why?
-dim(ProbeInfo)
+dim(ProbeInfo_I)
 # It only stores Type I by default.
 # The getProbeInfo function returns only Type I probes. However, this is not really specified in the help page. 
 # Take home message: when you work with a package, try before you trust!
 head(getProbeInfo(RGset, type = "II"))
 ProbeInfo_II <- data.frame(getProbeInfo(RGset, type = "II"))
 dim(ProbeInfo_II)
-350036+135476 #485512
+350036+135476 #485512 (we should mention this in out manuscript)
 
 # CHECKING ADDRESS AND VERYFING IF IT IS A OR B
 
 # From probes to Addresses
-head(ProbeInfo)
+head(ProbeInfo_I)
 head(ProbeInfo_II)
 
 # I want to check the probe having address 18756452 in the Type I array: none
-ProbeInfo[ProbeInfo$AddressA=="18756452",]
-ProbeInfo[ProbeInfo$AddressB=="18756452",]
+ProbeInfo_I[ProbeInfo_I$AddressA=="18756452",]
+ProbeInfo_I[ProbeInfo_I$AddressB=="18756452",]
 
 # there is not an AddressB_ID with code 18756452;
-ProbeInfo_II[ProbeInfo_II$AddressB=="18756452",] #can we remove this line-FO
+ProbeInfo_II[ProbeInfo_II$AddressB=="18756452",] 
 # there is an AddressA with code 18756452 and it is associated to the probe cg25192902, type II
 ProbeInfo_II[ProbeInfo_II$AddressA=="18756452",]
 
-
-# cg25192902, type II (the first probe in the Illumina450Manifest_clean object)
 # Using this commands you can fill the table on the word document
 Red[rownames(Red)=="18756452",]
 Green[rownames(Green)=="18756452",]
 
-# Are there out of band signals???
+# Are there out of band signals??? (optional:check it later)
 
 
-#favour 
-green_probes <-Green['18756452',] # =Red[rownames...]
-green_probes
-red_probes <-Red['18756452',]
-red_probes
+#ask FO to explain
+
+#green_probes <-Green['18756452',] # =Red[rownames...]
+#green_probes
+#red_probes <-Red['18756452',]
+#red_probes
 #the type 
-type <- Illumina450Manifest_clean[Illumina450Manifest_clean$Adress=="18756452",'Infinium_Design_Type']
-type <- droplevels(type) #to remove the levels
+#type <- Illumina450Manifest_clean[Illumina450Manifest_clean$Adress=="18756452",'Infinium_Design_Type']
+#type <- droplevels(type) #to remove the levels
+
 
 ######          STEP FOUR         ######
 ###### Create the object MSet.raw ######
@@ -135,13 +131,16 @@ type <- droplevels(type) #to remove the levels
 MSet.raw <- preprocessRaw(RGset)
 MSet.raw
 # Note that now the number of rows is 485512, exactly the number of probes according to the Manifest!
-save(MSet.raw,file="MSet_raw.RData")
+save(MSet.raw,file="./data/processed/MSet_raw.RData")
 Meth <- as.matrix(getMeth(MSet.raw))
 str(Meth)
 head(Meth)
 Unmeth <- as.matrix(getUnmeth(MSet.raw))
 str(Unmeth)
 head(Unmeth)
+
+
+# FO changed the probe (make sure if it is not FU)
 
 # Let's check what happens to the probes that we considered before when we move from RGset to MethylSet
 # cg25192902, type II (the first probe in the Illumina450Manifest_clean object)
@@ -152,6 +151,8 @@ Meth[rownames(Meth)=="cg01523029",] # changed the probe ID-FO
 
 #### OUT OF BAND SIGNALS: differences bw RGset and Methset
 # cg25192902, type II 
+
+#(make sure if it is not FU)
 Illumina450Manifest_clean[Illumina450Manifest_clean$IlmnID=="cg01523029",]
 Red[rownames(Red)=="18756452",]
 # But the two addresses are present also when I look at the Green object: these are out of band signals!
@@ -159,33 +160,36 @@ Green[rownames(Green)=="18756452",]
 Unmeth[rownames(Unmeth)=="cg25192902",]
 Meth[rownames(Meth)=="cg25192902",]
 
+
 ####### Step 5######
-#-QCplot
+#QCplot
+#Ask FO
+
 pdf("QCplot.pdf")
 qc <- getQC(MSet.raw)
 qc
 plotQC(qc)
 dev.off()
 
-#	-check the intensity of negative controls using minfi
+#	check the intensity of negative controls using minfi
 getProbeInfo(RGset, type = "Control")
-df_TypeControl <- data.frame(getProbeInfo(RGset, type = "Control"))
-table(df_TypeControl$Type)
-#head(getProbeInfo(RGset, type = "Control")) - #ensurring RGset contains controul probes
+NegativeControl <- data.frame(getProbeInfo(RGset, type = "Control"))
+table(NegativeControl$Type)
+#head(getProbeInfo(RGset, type = "Control")) - #ensuring RGset contains control probes
 controlStripPlot(RGset, controls="NEGATIVE")
 
-#	-calculate detection pValues; for each sample, how many probes have a detection p-value higher than the threshold assigned to each group?
-detP <- detectionP(RGset)
-save(detP,file="detP.RData")
+#	calculate detection pValues; for each sample, how many probes have a detection p-value higher than the threshold assigned to each group?
+Detection_pvalue <- detectionP(RGset)
+save(Detection_pvalue,file="Detection_pvalue.RData")
 
-failed <- detP>0.05
-head(failed)
-table(failed)
-sum(failed)
+Over_Threshold <- Detection_pvalue>0.05
+head(Over_Threshold)
+table(Over_Threshold)
+sum(Over_Threshold)
 paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(failed)))
-failed_per_sample <- colSums(failed)
-failed_per_sample
-summary(failed)#what the prof suggested
+Over_Threshold_Per_Sample <- colSums(Over_Threshold)
+Over_Threshold_Per_Sample
+summary(Over_Threshold)#what the prof suggested
 
 #####step 6######
 #6.	Calculate raw beta and M values and plot the densities of mean methylation values,
