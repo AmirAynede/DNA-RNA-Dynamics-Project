@@ -28,7 +28,7 @@ list.files("./data/raw/")
 #CORRECT SAMPLE SHEET FORMAT ==> REQUIRED COLUMNS: array and slide columns
 SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
 
-# Sample of type of sample sheet that can actually be read by the loading function
+# Sample of type of SampleSheet that can actually be read by the loading function
 SampleSheet 
 
 # load the samplesheet using the function read.metharray.sheet
@@ -42,6 +42,7 @@ targets
 # Create an object of class RGChannelSet using the function read.metharray.exp
 RGset <- read.metharray.exp(targets = targets)
 save(RGset,file="RGset_Report.RData")
+load("RGset_Report.RData")
 
 # Let's explore the RGset object: complex R data 
 # values are organised in specific slots identified by a specific name @name (@ access operator)
