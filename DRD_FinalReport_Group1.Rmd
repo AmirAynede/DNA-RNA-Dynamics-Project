@@ -22,12 +22,27 @@ date: "2025-06"
 
 ## 0. Import Libraries
 ```{r results="hide", message=FALSE, warning=FALSE}
+library(minfi)
+library(minfiData)
+library(IlluminaHumanMethylation450kmanifest)
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+library(shinyMethyl)
+library(AnnotationDbi)
+library(sva)
+install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 ```
 
 ## 1. Load raw data
 Load raw data with minfi and create an object called RGset storing the RGChannelSet object.
 
 ```{r results="hide", message=FALSE, warning=FALSE}
+list.files("./data/raw/")
+SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
+baseDir <- ("./data/raw")
+targets <- read.metharray.sheet(baseDir) 
+RGset <- read.metharray.exp(targets = targets)
+save(RGset,file="RGset_Report.RData")
+str(RGset)
 ```
 
 ## 2. Creation of R/G dataframes
@@ -35,15 +50,29 @@ Create the dataframes Red and Green to store the red and green fluorescences res
 
 **a. Red chanel fluorescence**
 ```{r results="hide", message=FALSE, warning=FALSE}
+Red <- data.frame(getRed(RGset)) 
+dim(Red)
+head(Red)
 ```
 
 **b. Green chanel fluorescence**
 ```{r results="hide", message=FALSE, warning=FALSE}
+Green <- data.frame(getGreen(RGset))
+dim(Green)
+head(Green)
 ```
 
 ## 3. Examination of  a probe 
 Determine whether address 18756452 belongs to a Type I or Type II probe by retrieving the red and green fluorescence values for this address and checking the manifest file.
 ```{r results="hide", message=FALSE, warning=FALSE}
+getManifest(RGset)
+getManifestInfo(RGset)}
+getProbeInfo(RGset)
+ProbeInfo_I <- data.frame(getProbeInfo(RGset))
+dim(ProbeInfo_I)
+head(getProbeInfo(RGset, type = "II"))
+ProbeInfo_II <- data.frame(getProbeInfo(RGset, type = "II"))
+dim(ProbeInfo_II)
 ```
 
 ++ FILL THE FOLLOWING TABLE.
