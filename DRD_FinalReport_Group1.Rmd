@@ -1,0 +1,129 @@
+---
+title: "DRD_FinalReport_Group1"
+author: Amir Aynede, Kian Keshani, Bianca Gustini, Yuri Dobrokhotov, Favour Osese
+  Otoijamun, Priscilla Castro Vargas
+date: "2025-06-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+title: Comprehensive Analysis of DNA Methylation Using the Illumina HumanMethylation450 BeadChip Platform
+output: html_document
+date: "2025-06"
+---
+
+# Introduction
+
+# Analytical pipeline and R code
+
+## 0. Import Libraries
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 1. Load raw data
+Load raw data with minfi and create an object called RGset storing the RGChannelSet object.
+
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 2. Creation of R/G dataframes
+Create the dataframes Red and Green to store the red and green fluorescences respectively.
+
+**a. Red chanel fluorescence**
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+**b. Green chanel fluorescence**
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 3. Examination of  a probe 
+Determine whether address 18756452 belongs to a Type I or Type II probe by retrieving the red and green fluorescence values for this address and checking the manifest file.
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+++ FILL THE FOLLOWING TABLE.
+
+## 4. Creation of the object MSet.raw
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 5. Quality control
+Perform quality checks and provide a brief comment to each step. 
+
+### a. QCplot
+```{r message=FALSE, warning=FALSE}
+```
+++COMMENT.
+
+### b. Intensity of negative controls
+```{r message=FALSE, warning=FALSE}
+```
+++COMMENT.
+
+### c. Calculation of detection p-values
+```{r message=FALSE, warning=FALSE}
+```
+++COMMENT.
+++how many probes have a detection p-value higher than 0.05?
+
+
+## 6. Calculation of raw Beta and M values
+Calculate raw beta and M values and plot the densities of mean methylation values, dividing the samples in CTRL and DIS (suggestion: subset the beta and M values matrixes in order to retain CTRL or DIS subjects and apply the function mean to the 2 subsets). 
+
+```{r message=FALSE, warning=FALSE}
+```
+
+++ Do you see any difference between the two groups?
+
+## 7. Data normalization
+Normalize the data using preprocessNoob and compare raw data and normalized data. Produce a plot with 6 panels in which, for both raw and normalized data, you show the density plots of beta mean values according to the chemistry of the probes, the density plot of beta standard deviation values according to the chemistry of the probes and the boxplot of beta values. 
+
+```{r message=FALSE, warning=FALSE}
+```
+
+++Provide a short comment about the changes you observe.
+++Do you think that the normalization approach that you used is appropriate considering this specific dataset? Try to color the boxplots according to the group (WT and MUT) and check whether the distribution of methylation values is different between the two groups, before and after normalization … 
+
+## 8. Principal Component Analysis
+Perform a PCA on the matrix of normalized beta values generated in step 7. 
+
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+++Comment the plot.
+++Do you see any outlier? Do the samples divide according to the group? Do they divide according to the sex of the samples? Do they divide according to the batch, that is the column Sentrix_ID?). 
+
+## 9. Identification of differentially methylated probes
+Using the matrix of normalized beta values generated in step 7, identify differentially methylated probes between CTRL and DIS groups using a t-test.
+
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 10. Multiple test correction
+Apply multiple test correction and set a significant threshold of 0.05.
+
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+++How many probes do you identify as differentially methylated considering nominal pValues? How many after Bonferroni correction? How many after BH correction?
+
+## 11. Graphic the results of the differential methylation analysis.
+Produce a volcano plot and a Manhattan plot of the results of differential methylation analysis. 
+
+**a. Volcano plot**
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+**b. Manhattan plot**
+```{r results="hide", message=FALSE, warning=FALSE}
+```
+
+## 12. Heatmap
+Produce an heatmap of the top 100 significant, differentially methylated probes.
+```{r results="hide", message=FALSE, warning=FALSE}
+```
