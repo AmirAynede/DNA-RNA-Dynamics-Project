@@ -16,7 +16,7 @@ library(AnnotationDbi)
 library(sva)
 install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 
-#load('data/raw/Illumina450Manifest_clean.RData') wtf!
+#load('data/raw/Illumina450Manifest_clean.RData') 
 
 ######     STEP ONE    ######
 ###### Import raw data ######
@@ -97,30 +97,19 @@ head(ProbeInfo_I)
 head(ProbeInfo_II)
 
 # I want to check the probe having address 18756452 in the Type I array: none
-ProbeInfo_I[ProbeInfo_I$AddressA=="18756452",]
-ProbeInfo_I[ProbeInfo_I$AddressB=="18756452",]
+ProbeInfo_I[ProbeInfo_I$AddressA=="18756452",] # nothing
+ProbeInfo_I[ProbeInfo_I$AddressB=="18756452",] # nothing
 
 # there is not an AddressB_ID with code 18756452;
-ProbeInfo_II[ProbeInfo_II$AddressB=="18756452",] 
-# there is an AddressA with code 18756452 and it is associated to the probe cg25192902, type II
-ProbeInfo_II[ProbeInfo_II$AddressA=="18756452",]
+ProbeInfo_II[ProbeInfo_II$AddressB=="18756452",] # nothing
+# there is an AddressA with code 18756452 and it is associated to the probe cg01523029, type II
+Probe_Info_18756452 <- ProbeInfo_II[ProbeInfo_II$AddressA=="18756452",] # here
 
 # Using this commands you can fill the table on the word document
-Red[rownames(Red)=="18756452",]
-Green[rownames(Green)=="18756452",]
+Red_fluorescences <- Red[rownames(Red)=="18756452",]
+Green_fluorescences <- Green[rownames(Green)=="18756452",]
 
 # Are there out of band signals??? (optional:check it later)
-
-
-#ask FO to explain
-
-#green_probes <-Green['18756452',] # =Red[rownames...]
-#green_probes
-#red_probes <-Red['18756452',]
-#red_probes
-#the type 
-#type <- Illumina450Manifest_clean[Illumina450Manifest_clean$Adress=="18756452",'Infinium_Design_Type']
-#type <- droplevels(type) #to remove the levels
 
 
 ######          STEP FOUR         ######
@@ -139,27 +128,24 @@ Unmeth <- as.matrix(getUnmeth(MSet.raw))
 str(Unmeth)
 head(Unmeth)
 
-
-# FO changed the probe (make sure if it is not FU)
-
 # Let's check what happens to the probes that we considered before when we move from RGset to MethylSet
-# cg25192902, type II (the first probe in the Illumina450Manifest_clean object)
-Red[rownames(Red)=="18756452",]
-Green[rownames(Green)=="18756452",]
+# cg01523029, type II (the first probe in the Illumina450Manifest_clean object)
+
 Unmeth[rownames(Unmeth)=="cg01523029",]
 Meth[rownames(Meth)=="cg01523029",] # changed the probe ID-FO
 
-#### OUT OF BAND SIGNALS: differences bw RGset and Methset
-# cg25192902, type II 
+load("data/raw/Illumina450Manifest.RData")
+Illumina450Manifest_clean <- Illumina450Manifest[Illumina450Manifest$CHR!="",]
+Illumina450Manifest_clean <- droplevels(Illumina450Manifest_clean)
+Probe_Info_cg01523029 <- Illumina450Manifest_clean[Illumina450Manifest_clean$IlmnID=="cg01523029",]
 
-#(make sure if it is not FU)
-Illumina450Manifest_clean[Illumina450Manifest_clean$IlmnID=="cg01523029",]
+#### OUT OF BAND SIGNALS: differences bw RGset and Methset ==> check for report
+# cg01523029, type II 
 Red[rownames(Red)=="18756452",]
 # But the two addresses are present also when I look at the Green object: these are out of band signals!
 Green[rownames(Green)=="18756452",]
-Unmeth[rownames(Unmeth)=="cg25192902",]
-Meth[rownames(Meth)=="cg25192902",]
-
+Unmeth[rownames(Unmeth)=="cg01523029",]
+Meth[rownames(Meth)=="cg01523029",]
 
 ####### Step 5######
 #QCplot
