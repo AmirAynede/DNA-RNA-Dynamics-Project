@@ -181,7 +181,7 @@ beta <- getBeta(MSet.raw)
 M <- getM(MSet.raw)
 beta_df <- data.frame(beta)
 M_df <- data.frame(M)
-
+###
 pheno <- read.csv("data/raw/SampleSheet_Report_II.csv", header=T, stringsAsFactors=T)
 pheno$SampleID <- paste(pheno$Sentrix_ID, pheno$Sentrix_Position, sep="_")
 
@@ -190,7 +190,7 @@ mut_samples <- pheno$SampleID[pheno$Group=="DIS"]
 
 beta_wt <- beta[ , wt_samples]
 density_beta_wt <- density(apply(beta_wt, MARGIN=1, mean, na.rm=T),na.rm=T)
-
+###
 SampleSheet$Group
 beta_ctrl <- beta_df[SampleSheet$Group=="CTRL",]
 beta_dis <- beta_df[SampleSheet$Group=="DIS",]
@@ -207,11 +207,11 @@ mean_of_M_dis <- apply(M_dis,1,mean,na.rm=T)
 ##########need to fix how to put it all in both beta and m in one plot, also the names of the plots
 
 par(mfrow=c(1,2))
-plot(density(mean_of_beta_ctrl, na.rm=T),main="Density of Beta Values",col="blue")
-lines(density(mean_of_beta_dis,na.rm=T), col="red")
+plot(density(mean_of_beta_ctrl, na.rm=T),main="Density of Beta Values",col="black")
+lines(density(mean_of_beta_dis,na.rm=T), col="orange")
 
-plot(density(mean_of_M_ctrl, na.rm=T),main="Density of M Values",col="blue")
-lines(density(mean_of_M_dis,na.rm=T), col="red")
+plot(density(mean_of_M_ctrl, na.rm=T),main="Density of M Values",col="black")
+lines(density(mean_of_M_dis,na.rm=T), col="orange")
 
 ########Step 7##########
 #	Normalize the data using PreprocessNoob
@@ -234,7 +234,7 @@ d_mean_of_beta_II <- density(mean_of_beta_II,na.rm=T)
 sd_of_beta_I <- apply(beta_I,1,sd,na.rm=T)
 sd_of_beta_II <- apply(beta_II,1,sd,na.rm=T)
 d_sd_of_beta_I <- density(sd_of_beta_I,)
-d_sd_of_beta_II <- density(sd_of_beta_II) #doesn't work. We need to find out why- all na values should have been omited
+#d_sd_of_beta_II <- density(sd_of_beta_II) #doesn't work. We need to find out why- all na values should have been omited
 d_sd_of_beta_II <- density(na.omit(sd_of_beta_II))
 
 ?preprocessNoob
@@ -368,6 +368,7 @@ plot(pca_results$x[,1],pca_results$x[,2],cex=2,pch=17,col=pheno$Sentrix_ID,main=
 text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
 legend('bottomright', legend=levels(pheno$Sentrix_ID), col=c(1:nlevels(pheno$Sentrix_ID)), pch=17)
 
+####
 pca <- prcomp(beta_preprocessNoob, scale = T)
 par(mfrow = c(1,1))
 {plot(pca$x[, 1], pca$x[, 2], cex = 2, pch = 18, xlab = "PC1", ylab = "PC2", xlim = c(-500, 800), main = "PCA")
@@ -379,7 +380,7 @@ pcr <- data.frame(pca$rotation[,1:3], Group=targets$Group)
 ggplot(pcr,aes(PC1,PC2, color=Group))+geom_point(size=4)
 pcr <- data.frame(pca$rotation[,1:3], Group=targets$Sex)
 ggplot(pcr,aes(PC1,PC2, color=Group))+geom_point(size=4)
-
+####
 
 ###Step 9######
 #identify differentially methylated probes between CTRL and DIS groups using the function
@@ -405,26 +406,26 @@ My_mannwhitney_function <- function(x) {
 }
 
 # Let's apply the function to few rows of beta_preprocessQuantile
-first20k_beta_preprocessNoob <- beta_preprocessNoob[1:20000,]
-pValues_ttest_20k <- apply(first20k_beta_preprocessNoob,1, My_ttest_function)
-pValues_ttest_20k
-pValues_wilcox_20k <- apply(first20k_beta_preprocessNoob, 1, My_mannwhitney_function)
-pValues_wilcox_20k
+
+pValues_ttest <- apply(beta_preprocessNoob,1, My_ttest_function)
+pValues_ttest
+pValues_wilcox <- apply(beta_preprocessNoob, 1, My_mannwhitney_function)
+pValues_wilcox
 
 # We can create a data.frame with all the beta values and the pValue column
-final_ttest_20k <- data.frame(first20k_beta_preprocessNoob, pValues_ttest_20k)
-final_wilcox_20k <- data.frame(first20k_beta_preprocessNoob, pValues_wilcox_20k)
+final_ttest<- data.frame(beta_preprocessNoob, pValues_ttest)
+final_wilcox <- data.frame(beta_preprocessNoob, pValues_wilcox)
 
 # We can order the probes on the basis of the pValues column (from the smallest to the largest value)
-final_ttest_20k <- final_ttest_20k[order(final_ttest_20k$pValues_ttest_20k),]
-head(final_ttest_20k)
+final_ttest<- final_ttest[order(final_ttest$pValues_ttest),]
+head(final_ttest)
 
-final_wilcox_20k <- final_wilcox_20k[order(final_wilcox_20k$pValues_wilcox_20k),]
-head(final_wilcox_20k)
+final_wilcox <- final_wilcox[order(final_wilcox$pValues_wilcox),]
+head(final_wilcox)
 
 #filter for significant probes < 0.05
-significant_ttest <- final_ttest_20k[final_ttest_20k$pValues_ttest_20k <= 0.05, ]
-significant_wilcox <- final_wilcox_20k[final_wilcox_20k$pValues_wilcox_20k <= 0.05, ]
+significant_ttest <- final_ttest[final_ttest$pValues_ttest <= 0.05, ]
+significant_wilcox <- final_wilcox[final_wilcox$pValues_wilcox <= 0.05, ]
 
 intersection <- intersect(rownames(significant_ttest),rownames(significant_wilcox))
 length(intersection)
@@ -432,36 +433,36 @@ length(intersection)
 
 ####Step 10######
 #	Apply multiple test correction and set a significant threshold of 0.05.
-corrected_pValues_BH <- p.adjust(final_ttest_20k$pValues_ttest_20k,"BH")
-corrected_pValues_Bonf <- p.adjust(final_ttest_20k$pValues_ttest_20k,"bonferroni")
-final_ttest_20k_corrected <- data.frame(final_ttest_20k, corrected_pValues_BH, corrected_pValues_Bonf)
-head(finalttest_20k_corrected)
+corrected_pValues_BH <- p.adjust(final_ttest$pValues_ttest,"BH")
+corrected_pValues_Bonf <- p.adjust(final_ttest$pValues_ttest,"bonferroni")
+final_ttest_corrected <- data.frame(final_ttest, corrected_pValues_BH, corrected_pValues_Bonf)
+head(final_ttest_corrected)
 
 # We can visualize the distributions of the p-values and of the corrected p-values by boxplots:
-colnames(final_ttest_20k_corrected)
-boxplot(final_ttest_20k_corrected[,9:11])
+colnames(final_ttest_corrected)
+boxplot(final_ttest_corrected[,9:11]) #check BI's notes for the plot
 
 # How many probes survive the multiple test correction?
-dim(final_ttest_20k_corrected[final_ttest_20k_corrected$pValues_ttest<=0.05,])
-dim(final_ttest_20k_corrected[final_ttest_20k_corrected$corrected_pValues_BH<=0.05,])
-dim(final_ttest_20k_corrected[final_ttest_20k_corrected$corrected_pValues_Bonf<=0.05,])
+dim(final_ttest_corrected[final_ttest_corrected$pValues_ttest<=0.05,])
+dim(final_ttest_corrected[final_ttest_corrected$corrected_pValues_BH<=0.05,])
+dim(final_ttest_corrected[final_ttest_corrected$corrected_pValues_Bonf<=0.05,])
   # for both test, I have none that pass the test. Is that a problem?
 
 ####Step 11######
 #	Produce a volcano plot and a Manhattan plot
-beta_first20k <- final_ttest_20k_corrected[,1:8]
+beta_first <- final_ttest_corrected[,1:8]
 
-beta_first20k_ctrl <- beta_first20k[,pheno$Group=="CTRL"]
-mean_beta_first20k_ctrl <- apply(beta_first20k_ctrl,1,mean)
-beta_first20k_dis <- beta_first20k[,pheno$Group=="DIS"]
-mean_beta_first20k_dis <- apply(beta_first20k_dis,1,mean)
+beta_first_ctrl <- beta_first[,pheno$Group=="CTRL"]
+mean_beta_first_ctrl <- apply(beta_first_ctrl,1,mean)
+beta_first_dis <- beta_first[,pheno$Group=="DIS"]
+mean_beta_first_dis <- apply(beta_first_dis,1,mean)
 
 # Now we can calculate the difference between average values:
-delta_first20k <- mean_beta_first20k_dis-mean_beta_first20k_ctrl
-head(delta_first20k)
+delta_first <- mean_beta_first_dis-mean_beta_first_ctrl
+head(delta_first)
 
 # Now we create a dataframe with two columns, one containing the delta values and the other with the -log10 of p-values
-toVolcPlot <- data.frame(delta_first20k, -log10(final_ttest_20k_corrected$pValues_ttest))
+toVolcPlot <- data.frame(delta_first, -log10(final_ttest_corrected$pValues_ttest))
 head(toVolcPlot)
 plot(toVolcPlot[,1], toVolcPlot[,2])
 
@@ -477,35 +478,37 @@ dev.off()
 install.packages("qqman")
 library(qqman)
 
-# To calculate the Manhattan plot, during the lesson we will use the object final_ttest_reduced, that I prepared by applying the ttest function on a subset of the probes of the dataset. The object is in the Lesson 6 folder:
-load("~/Dropbox/DRD_2025/6/final_ttest_reduced.RData") # I used the one the prof created but we should probably ask how it was made tao see if it applies to our case
+####
+# To calculate the Manhattan plot, during the lesson we will use the object final_ttest_corrected, that I prepared by applying the ttest function on a subset of the probes of the dataset. The object is in the Lesson 6 folder:
+load("~/Dropbox/DRD_2025/6/final_ttest_corrected.RData") # I used the one the prof created but we should probably ask how it was made tao see if it applies to our case
 # First we have to annotate our dataframe, that is add genome annotation information for each cpg probe. We will use the Illumina450Manifest_clean object that we previously created:
 load('~/Dropbox/DRD_2025/2/Illumina450Manifest_clean.RData')
+####
 
 # We will use the merge() function to merge the final_ttest_corrected with the Illumina450Manifest_clean object
 ?merge
 # The merge function performs the merging by using a column which is common to two dataframes and which has the same name in the two dataframes
 head(Illumina450Manifest_clean)
-head(final_ttest_reduced)
+head(final_ttest_corrected)
 
 # We want to merge on the basis of the CpG probes, but unfortunately in the final_ttest_corrected object the CpG probes are stored in the rownames, not in a column. We can overcome this issue as follows:
-final_ttest_reduced <- data.frame(rownames(final_ttest_reduced),final_ttest_reduced)
-head(final_ttest_reduced)
-colnames(final_ttest_reduced)
-colnames(final_ttest_reduced)[1] <- "IlmnID"
-colnames(final_ttest_reduced)
+final_ttest_corrected <- data.frame(rownames(final_ttest_corrected),final_ttest_corrected)
+head(final_ttest_corrected)
+colnames(final_ttest_corrected)
+colnames(final_ttest_corrected)[1] <- "IlmnID"
+colnames(final_ttest_corrected)
 
-final_ttest_reduced_annotated <- merge(final_ttest_reduced, Illumina450Manifest_clean,by="IlmnID")
-dim(final_ttest_reduced)
+final_ttest_corrected_annotated <- merge(final_ttest_corrected, Illumina450Manifest_clean,by="IlmnID")
+dim(final_ttest_corrected)
 dim(Illumina450Manifest_clean)
-dim(final_ttest_reduced_annotated)
-str(final_ttest_reduced_annotated)
+dim(final_ttest_corrected_annotated)
+str(final_ttest_corrected_annotated)
 
 # Note that the dataframe is automathically reordered on the basis of alphabetical order of the column used for merging
-head(final_ttest_reduced_annotated)
+head(final_ttest_corrected_annotated)
 
 # Now we can create the input for the Manhattan plot analysis. The input object should contain 4 info: probe, chromosome, position on the chromosome and p-value. We will select these columns in the final_ttest_corrected_annotated object
-input_Manhattan <- final_ttest_reduced_annotated[colnames(final_ttest_reduced_annotated) %in% c("IlmnID","CHR","MAPINFO","pValues_ttest")]
+input_Manhattan <- final_ttest_corrected_annotated[colnames(final_ttest_corrected_annotated) %in% c("IlmnID","CHR","MAPINFO","pValues_ttest")]
 dim(input_Manhattan)
 head(input_Manhattan)
 str(input_Manhattan$CHR)
@@ -534,7 +537,7 @@ pheno$Group
 colorbar <- c("green","orange","orange","green","orange","orange","green","green")
 
 # In the following lines we will compare the results of hierchical clustering using different methods.
-input_heatmap=as.matrix(final_ttest_20k[1:100,1:8])
+input_heatmap=as.matrix(final_ttest[1:100,1:8])
 # Complete (default options)
 heatmap.2(input_heatmap,col=terrain.colors(100),Rowv=T,Colv=T,dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F,main="Complete linkage")
 
@@ -550,4 +553,4 @@ heatmap.2(input_heatmap,col=terrain.colors(100),Rowv=T,Colv=T,hclustfun = functi
 col2=colorRampPalette(c("green","black","red"))(100)
 heatmap.2(input_heatmap,col=col2,Rowv=T,Colv=T,dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F)
 
-#####Sorry guys. This is super sloppy
+
