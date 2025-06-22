@@ -14,9 +14,9 @@ library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(shinyMethyl)
 library(AnnotationDbi)
 library(sva)
-install.packages("./library/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
+install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 
-load('./data/raw/Illumina450Manifest_clean.RData')
+#load('data/raw/Illumina450Manifest_clean.RData') wtf!
 
 ######     STEP ONE    ######
 ###### Import raw data ######
