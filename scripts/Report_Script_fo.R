@@ -1,12 +1,10 @@
-######               STEP 0              ###### PREPERATION(ENVIRONMENT SETTING)
-'''
-# As always, first set the working directory: 
-# for the project you need the one in which you have the "InputData" folder
-getwd()
-setwd("~/Dropbox/DRD_2025/Final_Report-20250521/")
-'''
-# Install necessary packages:
+######  STEP 0  ######
+######  BASIC PREPERATION ######
 
+# First, create the project structure by running the file "00_setup_project_structure.R".
+# Then, set the working directory to where the "DRD_2025_project" is located.
+
+# Install and load the necessary packages:
 library(minfi)
 library(minfiData)
 library(IlluminaHumanMethylation450kmanifest)
@@ -16,30 +14,30 @@ library(AnnotationDbi)
 library(sva)
 install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 
+
 #load('data/raw/Illumina450Manifest_clean.RData') 
+#######has to be checked######load('data/raw/Illumina450Manifest_clean.RData') wtf!
 
-######     STEP ONE    ######
-###### Import raw data ######
-###### List the files included in the folder ######
+######            STEP ONE              ######
+######  DATA IMPORT AND OBJECT CREATION ######
 
+#List the files included in the folder
 list.files("./data/raw/")
 
-#SAMPLE SHEET FILE NEEDS TO BE DESIGNED CORRECTLY IN ORDER TO BE ABLE TO LOAD IT: have a look at the csv
+#Sample sheet file needs to be designed correctly in order to be able to load it: have a look at the csv
 #CORRECT SAMPLE SHEET FORMAT ==> REQUIRED COLUMNS: array and slide columns
 SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
 
-# sample of type of sample sheet that can actually be read by the loading function
+# Sample of type of sample sheet that can actually be read by the loading function
 SampleSheet 
 
-# LOADING FUNCTION
-# Set the directory in which the raw data are stored
 # load the samplesheet using the function read.metharray.sheet
 baseDir <- ("./data/raw")
 # basedir arg combines array and sample name (slide) columns in the base name column
 targets <- read.metharray.sheet(baseDir) 
 # combines idat files that share name: 
 # dataframe generated from read.metharray.sheet(baseDir) containing info necessary for loading function
-targets  
+targets
 
 # Create an object of class RGChannelSet using the function read.metharray.exp
 RGset <- read.metharray.exp(targets = targets)
