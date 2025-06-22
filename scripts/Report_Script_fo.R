@@ -170,7 +170,7 @@ Over_Threshold <- Detection_pvalue>0.05
 head(Over_Threshold)
 table(Over_Threshold)
 sum(Over_Threshold)
-paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(failed)))
+paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(Over_Threshold)))
 Over_Threshold_Per_Sample <- colSums(Over_Threshold)
 Over_Threshold_Per_Sample
 summary(Over_Threshold)#what the prof suggested
@@ -182,12 +182,20 @@ M <- getM(MSet.raw)
 beta_df <- data.frame(beta)
 M_df <- data.frame(M)
 
-pheno <-SampleSheet
-pheno$Group
-beta_ctrl <- beta_df[pheno$Group=="CTRL",]
-beta_dis <- beta_df[pheno$Group=="DIS",]
-M_ctrl <- M_df[pheno$Group=="CTRL",]
-M_dis <- M_df[pheno$Group=="DIS",]
+pheno <- read.csv("data/raw/SampleSheet_Report_II.csv", header=T, stringsAsFactors=T)
+pheno$SampleID <- paste(pheno$Sentrix_ID, pheno$Sentrix_Position, sep="_")
+
+wt_samples <- pheno$SampleID[pheno$Group=="CTRL"]
+mut_samples <- pheno$SampleID[pheno$Group=="DIS"]
+
+beta_wt <- beta[ , wt_samples]
+density_beta_wt <- density(apply(beta_wt, MARGIN=1, mean, na.rm=T),na.rm=T)
+
+SampleSheet$Group
+beta_ctrl <- beta_df[SampleSheet$Group=="CTRL",]
+beta_dis <- beta_df[SampleSheet$Group=="DIS",]
+M_ctrl <- M_df[SampleSheet$Group=="CTRL",]
+M_dis <- M_df[SampleSheet$Group=="DIS",]
 
 
 mean_of_beta_ctrl <- apply(beta_ctrl,1,mean,na.rm=T)
@@ -197,15 +205,13 @@ mean_of_M_dis <- apply(M_dis,1,mean,na.rm=T)
 
 #plotting the density of mean methylation values
 ##########need to fix how to put it all in both beta and m in one plot, also the names of the plots
-pdf("Density_Mean_Methylation_Values.pdf")
+
 par(mfrow=c(1,2))
-plot(density(mean_of_beta_ctrl,na.rm=T), col="orange", lwd=2, main="Density of Mean Beta Values")
-#lines(density(mean_of_M_ctrl, na.rm=T), col="purple",)
-plot(density(mean_of_M_ctrl, na.rm=T), col="purple")
-plot(density(mean_of_beta_dis,na.rm=T), col="orange")
-#lines(density(mean_of_M_dis),col='purple')
-plot(density(mean_of_M_dis, na.rm=T), col="purple")
-dev.off()
+plot(density(mean_of_beta_ctrl, na.rm=T),main="Density of Beta Values",col="blue")
+lines(density(mean_of_beta_dis,na.rm=T), col="red")
+
+plot(density(mean_of_M_ctrl, na.rm=T),main="Density of M Values",col="blue")
+lines(density(mean_of_M_dis,na.rm=T), col="red")
 
 ########Step 7##########
 #	Normalize the data using PreprocessNoob
@@ -233,8 +239,8 @@ d_sd_of_beta_II <- density(na.omit(sd_of_beta_II))
 
 ?preprocessNoob
 # According to the help page, the input can be an RGset  or MehylSet object. Let's load the RGset object:
-load("~/Dropbox/DRD_2025/3/RGset.RData")
-RGset
+#load("~/Dropbox/DRD_2025/3/RGset.RData")
+#RGset
 ?GenomicRatioSet
 
 preprocessNoob_results <- preprocessNoob(RGset)
@@ -271,7 +277,7 @@ boxplot(beta_preprocessNoob)
 dev.off()
 
 #with better scale, but i'm not sure it helped
-par(mfrow=c(2,3))
+'''par(mfrow=c(2,3))
 
 plot(d_mean_of_beta_I, col="blue", main="Raw Beta", ylim=c(0, 5))
 lines(d_mean_of_beta_II, col="red")
@@ -284,7 +290,8 @@ lines(d_mean_of_beta_preprocessNoob_II, col="red")
 plot(d_sd_of_beta_preprocessNoob_I, col="blue", main="PreprocessNoob SD", ylim=c(0, 60))
 lines(d_sd_of_beta_preprocessNoob_II, col="red")
 boxplot(beta_preprocessNoob, main="PreprocessNoob Beta Boxplot", ylim=c(0, 1))
-
+''' 
+'''
 #boxplot of normalised values
 #attempt1
 boxplot(beta_preprocessNoob, ylab='probe mean', xlab='probes mean', main='Boxplot of normalised beta values',col=pheno$Group,r..)
@@ -299,9 +306,9 @@ boxplot(beta_preprocessNoob,
         xlab='Samples',
         main='Boxplot of Normalised Beta Values')
 # legend
-legend("topright", legend=levels(pheno$Group), fill=c("skyblue", "green"))
+legend("topright", legend=levels(pheno$Group), fill=c("skyblue", "green"))'''
 
-#now plotting with boxplot based on sample
+#now plotting with boxplot based on sample but fix output
 pdf("Plot_comparison_raw_preprocessNoob control vs disease.pdf",height=7,width=15)
 par(mfrow=c(2,3))
 plot(d_mean_of_beta_I,col="blue",main="raw beta")
@@ -310,7 +317,7 @@ plot(d_sd_of_beta_I,col="blue",main="raw sd")
 lines(d_sd_of_beta_II,col="red")
 boxplot(beta,
         las=2,                      # rotate x-axis labels
-        col=c("skyblue", "green")[pheno$Group],  # color by group
+        col=c("green", "magenta")[pheno$Group],  # color by group
         ylab='Beta values',
         xlab='Samples',
         main='Boxplot of Beta Values')
@@ -321,7 +328,7 @@ plot(d_sd_of_beta_preprocessNoob_I,col="blue",main="preprocessNoob sd")
 lines(d_sd_of_beta_preprocessNoob_II,col="red")
 boxplot(beta_preprocessNoob,
         las=2,                      # rotate x-axis labels
-        col=c("skyblue", "green")[pheno$Group],  # color by group
+        col=c("green", "magenta")[pheno$Group],  # color by group
         ylab='Beta values',
         xlab='Samples',
         main='Boxplot of Normalised Beta Values')
@@ -360,6 +367,19 @@ palette(c('red','blue','green','yellow','purple'))
 plot(pca_results$x[,1],pca_results$x[,2],cex=2,pch=17,col=pheno$Sentrix_ID,main='PCA by Sentrix_ID',xlab="PC1",ylab="PC2",xlim=c(-1000,1000),ylim=c(-1000,1000))
 text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
 legend('bottomright', legend=levels(pheno$Sentrix_ID), col=c(1:nlevels(pheno$Sentrix_ID)), pch=17)
+
+pca <- prcomp(beta_preprocessNoob, scale = T)
+par(mfrow = c(1,1))
+{plot(pca$x[, 1], pca$x[, 2], cex = 2, pch = 18, xlab = "PC1", ylab = "PC2", xlim = c(-500, 800), main = "PCA")
+  text(pca$x[, 1], pca$x[,2], labels = rownames(pca$x), pos = 4, cex = 0.5)}
+
+install.packages("ggplot2")
+library(ggplot2)
+pcr <- data.frame(pca$rotation[,1:3], Group=targets$Group)
+ggplot(pcr,aes(PC1,PC2, color=Group))+geom_point(size=4)
+pcr <- data.frame(pca$rotation[,1:3], Group=targets$Sex)
+ggplot(pcr,aes(PC1,PC2, color=Group))+geom_point(size=4)
+
 
 ###Step 9######
 #identify differentially methylated probes between CTRL and DIS groups using the function
