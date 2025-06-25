@@ -111,6 +111,18 @@ Green[rownames(Green)=="18756452",]
 
 # Are there out of band signals??? (optional:check it later)
 
+#To present the information about the probe, Casini creted a data frame. I think is useful, cause Raviolo asks us to fill a table. In the next lines you have the Casini data frame: -PCV
+df_summary_probes <- data.frame(
+  "Sample" = clean_samples,
+  "Red Fluorescence" = as.numeric (red_probe[1, ]),
+  "Green Fluorescence" = as.numeric (green_probe[1,]),
+  "Type" = rep("II", length(colnames(Red))),
+  "Color" = rep("Both", length(colnames(Red)))
+)
+
+print(df_summary_probes)
+
+
 
 #ask FO to explain
 

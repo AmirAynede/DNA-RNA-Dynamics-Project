@@ -20,7 +20,7 @@ date: "2025-06"
 
 # Analytical pipeline and R code
 
-## 0. Import Libraries
+## 0. Preparation (Environment Setting and Importing Libraries)
 ```{r results="hide", message=FALSE, warning=FALSE}
 library(minfi)
 library(minfiData)
@@ -29,26 +29,28 @@ library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(shinyMethyl)
 library(AnnotationDbi)
 library(sva)
+library(qqman)
+library(gplots)
 install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 ```
 
 ## 1. Load raw data
-Load raw data with minfi and create an object called RGset storing the RGChannelSet object.
+Set the proper working directory where the data is stored, load raw data with minfi and create an object called RGset storing the RGChannelSet object.
 
 ```{r results="hide", message=FALSE, warning=FALSE}
-list.files("./data/raw/")
+setwd("~/chunche/DRD_2025_Project")
 SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
 baseDir <- ("./data/raw")
 targets <- read.metharray.sheet(baseDir) 
 RGset <- read.metharray.exp(targets = targets)
 save(RGset,file="RGset_Report.RData")
-str(RGset)
 ```
 
 ## 2. Creation of R/G dataframes
 Create the dataframes Red and Green to store the red and green fluorescences respectively.
 
 **a. Red chanel fluorescence**
+Extraction of the fluorescence intensity associated with red.
 ```{r results="hide", message=FALSE, warning=FALSE}
 Red <- data.frame(getRed(RGset)) 
 dim(Red)
@@ -56,6 +58,7 @@ head(Red)
 ```
 
 **b. Green chanel fluorescence**
+Extraction of the fluorescence intensity associated with green.
 ```{r results="hide", message=FALSE, warning=FALSE}
 Green <- data.frame(getGreen(RGset))
 dim(Green)
@@ -64,21 +67,33 @@ head(Green)
 
 ## 3. Examination of  a probe 
 Determine whether address 18756452 belongs to a Type I or Type II probe by retrieving the red and green fluorescence values for this address and checking the manifest file.
+
+Creation of data frames containing the result of Type I and Type II probes respectively.
 ```{r results="hide", message=FALSE, warning=FALSE}
-getManifest(RGset)
-getManifestInfo(RGset)}
-getProbeInfo(RGset)
 ProbeInfo_I <- data.frame(getProbeInfo(RGset))
-dim(ProbeInfo_I)
-head(getProbeInfo(RGset, type = "II"))
 ProbeInfo_II <- data.frame(getProbeInfo(RGset, type = "II"))
-dim(ProbeInfo_II)
+```
+
+Check the probe having the address 18756452 in the Type I array:
+```{r results="hide", message=FALSE, warning=FALSE}
+ProbeInfo_I[ProbeInfo_I$AddressA=="18756452",]
+ProbeInfo_I[ProbeInfo_I$AddressB=="18756452",]
+```
+
+Check the probe having the address 18756452 in the Type I array:
+```{r results="hide", message=FALSE, warning=FALSE}
+ProbeInfo_II[ProbeInfo_II$AddressB=="18756452",] 
+ProbeInfo_II[ProbeInfo_II$AddressA=="18756452",]
 ```
 
 ++ FILL THE FOLLOWING TABLE.
 
 ## 4. Creation of the object MSet.raw
 ```{r results="hide", message=FALSE, warning=FALSE}
+MSet.raw <- preprocessRaw(RGset)
+save(MSet.raw,file="./input_data/MSet_raw.RData")
+Meth <- as.matrix(getMeth(MSet.raw))
+Unmeth <- as.matrix(getUnmeth(MSet.raw))
 ```
 
 ## 5. Quality control
@@ -86,16 +101,33 @@ Perform quality checks and provide a brief comment to each step.
 
 ### a. QCplot
 ```{r message=FALSE, warning=FALSE}
+pdf("QCplot.pdf")
+qc <- getQC(MSet.raw)
+plotQC(qc)
+dev.off()
 ```
 ++COMMENT.
 
 ### b. Intensity of negative controls
 ```{r message=FALSE, warning=FALSE}
+getProbeInfo(RGset, type = "Control")
+NegativeControl <- data.frame(getProbeInfo(RGset, type = "Control"))
+table(NegativeControl$Type)
 ```
 ++COMMENT.
 
 ### c. Calculation of detection p-values
 ```{r message=FALSE, warning=FALSE}
+Detection_pvalue <- detectionP(RGset)
+save(Detection_pvalue,file="Detection_pvalue.RData")
+Over_Threshold <- Detection_pvalue>0.05
+head(Over_Threshold)
+table(Over_Threshold)
+sum(Over_Threshold)
+paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(failed)))
+Over_Threshold_Per_Sample <- colSums(Over_Threshold)
+Over_Threshold_Per_Sample
+summary(Over_Threshold)
 ```
 ++COMMENT.
 ++how many probes have a detection p-value higher than 0.05?
@@ -105,6 +137,34 @@ Perform quality checks and provide a brief comment to each step.
 Calculate raw beta and M values and plot the densities of mean methylation values, dividing the samples in CTRL and DIS (suggestion: subset the beta and M values matrixes in order to retain CTRL or DIS subjects and apply the function mean to the 2 subsets). 
 
 ```{r message=FALSE, warning=FALSE}
+beta <- getBeta(MSet.raw)
+M <- getM(MSet.raw)
+beta_df <- data.frame(beta)
+M_df <- data.frame(M)
+
+pheno <-SampleSheet
+pheno$Group
+beta_ctrl <- beta_df[pheno$Group=="CTRL",]
+beta_dis <- beta_df[pheno$Group=="DIS",]
+M_ctrl <- M_df[pheno$Group=="CTRL",]
+M_dis <- M_df[pheno$Group=="DIS",]
+
+
+mean_of_beta_ctrl <- apply(beta_ctrl,1,mean,na.rm=T)
+mean_of_beta_dis <- apply(beta_dis,1,mean,na.rm=T)
+mean_of_M_ctrl <- apply(M_ctrl,1,mean,na.rm=T)
+mean_of_M_dis <- apply(M_dis,1,mean,na.rm=T)
+```
+
+Plotting the density of mean methylation values.
+```{r message=FALSE, warning=FALSE}
+pdf("Density_Mean_Methylation_Values.pdf")
+par(mfrow=c(1,2))
+plot(density(mean_of_beta_ctrl,na.rm=T), col="orange", lwd=2, main="Density of Mean Beta Values")
+plot(density(mean_of_M_ctrl, na.rm=T), col="purple")
+plot(density(mean_of_beta_dis,na.rm=T), col="orange")
+plot(density(mean_of_M_dis, na.rm=T), col="purple")
+dev.off()
 ```
 
 ++ Do you see any difference between the two groups?
@@ -112,7 +172,116 @@ Calculate raw beta and M values and plot the densities of mean methylation value
 ## 7. Data normalization
 Normalize the data using preprocessNoob and compare raw data and normalized data. Produce a plot with 6 panels in which, for both raw and normalized data, you show the density plots of beta mean values according to the chemistry of the probes, the density plot of beta standard deviation values according to the chemistry of the probes and the boxplot of beta values. 
 
+Subset the data frame of beta values according to Type I and Type II.
 ```{r message=FALSE, warning=FALSE}
+dfI <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type=="I",]
+dfI <- droplevels(dfI)
+dfII <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type=="II",]
+dfII <- droplevels(dfII)
+
+beta_I <- beta[rownames(beta) %in% dfI$IlmnID,]
+beta_II <- beta[rownames(beta) %in% dfII$IlmnID,]
+
+mean_of_beta_I <- apply(beta_I,1,mean)
+mean_of_beta_II <- apply(beta_II,1,mean)
+d_mean_of_beta_I <- density(mean_of_beta_I,na.rm=T)
+d_mean_of_beta_II <- density(mean_of_beta_II,na.rm=T)
+```
+
+Calculation of the densities of the standard deviations, which can be calculated using the function sd():
+```{r results="hide", message=FALSE, warning=FALSE}
+sd_of_beta_I <- apply(beta_I,1,sd,na.rm=T)
+sd_of_beta_II <- apply(beta_II,1,sd,na.rm=T)
+d_sd_of_beta_I <- density(sd_of_beta_I,)
+d_sd_of_beta_II <- density(sd_of_beta_II) #doesn't work. We need to find out why- all na values should have been omited
+d_sd_of_beta_II <- density(na.omit(sd_of_beta_II))
+```
+
+Use of preprocessNoob.
+```{r results="hide", message=FALSE, warning=FALSE}
+load("~/Downloads/L3/RGset.RData")
+preprocessNoob_results <- preprocessNoob(RGset)
+beta_preprocessNoob <- getBeta(preprocessNoob_results)
+save(beta_preprocessNoob, file="beta_preprocessNoob.RData")
+```
+
+Divide beta_preprocessNoob matrix according to type I and type II probes, calculate the mean and the standartd deviation for each probe across the 8 samples and calculate the density distributions.
+```{r results="hide", message=FALSE, warning=FALSE}
+beta_preprocessNoob_I <- beta_preprocessNoob[rownames(beta_preprocessNoob) %in% dfI$IlmnID,]
+beta_preprocessNoob_II <- beta_preprocessNoob[rownames(beta_preprocessNoob) %in% dfII$IlmnID,]
+mean_of_beta_preprocessNoob_I <- apply(beta_preprocessNoob_I,1,mean)
+mean_of_beta_preprocessNoob_II <- apply(beta_preprocessNoob_II,1,mean)
+d_mean_of_beta_preprocessNoob_I <- density(mean_of_beta_preprocessNoob_I,na.rm=T)
+d_mean_of_beta_preprocessNoob_II <- density(mean_of_beta_preprocessNoob_II,na.rm=T)
+sd_of_beta_preprocessNoob_I <- apply(beta_preprocessNoob_I,1,sd)
+sd_of_beta_preprocessNoob_II <- apply(beta_preprocessNoob_II,1,sd)
+d_sd_of_beta_preprocessNoob_I <- density(sd_of_beta_preprocessNoob_I,na.rm=T)
+d_sd_of_beta_preprocessNoob_II <- density(sd_of_beta_preprocessNoob_II,na.rm=T)
+```
+
+Plot the data.
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("Plot_comparison_raw_preprocessNoob.pdf",height=7,width=15)
+par(mfrow=c(2,3))
+plot(d_mean_of_beta_I, col="blue", main="Raw Beta", ylim=c(0, 5))
+lines(d_mean_of_beta_II, col="red")
+plot(d_sd_of_beta_I, col="blue", main="Raw SD", ylim=c(0, 30))
+lines(d_sd_of_beta_II, col="red")
+boxplot(beta, main="Raw Beta Boxplot", ylim=c(0, 1))
+
+plot(d_mean_of_beta_preprocessNoob_I, col="blue", main="PreprocessNoob Beta", ylim=c(0, 5))
+lines(d_mean_of_beta_preprocessNoob_II, col="red")
+plot(d_sd_of_beta_preprocessNoob_I, col="blue", main="PreprocessNoob SD", ylim=c(0, 60))
+lines(d_sd_of_beta_preprocessNoob_II, col="red")
+boxplot(beta_preprocessNoob, main="PreprocessNoob Beta Boxplot", ylim=c(0, 1))
+```
+
+Boxplot of normalized values.
+```{r results="hide", message=FALSE, warning=FALSE}
+pheno$Group <- as.factor(pheno$Group)
+```
+
+Boxplot of normalized values.
+```{r results="hide", message=FALSE, warning=FALSE}
+par(mfrow=c(1,1))
+boxplot(beta_preprocessNoob,
+        las=2,                      # rotate x-axis labels
+        col=c("skyblue", "green")[pheno$Group],  # color by group
+        ylab='Beta values',
+        xlab='Samples',
+        main='Boxplot of Normalised Beta Values')
+
+legend("topright", legend=levels(pheno$Group), fill=c("skyblue", "green"))
+```
+
+
+Plot based on sample.
+
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("Plot_comparison_raw_preprocessNoob control vs disease.pdf",height=7,width=15)
+par(mfrow=c(2,3))
+plot(d_mean_of_beta_I,col="blue",main="raw beta")
+lines(d_mean_of_beta_II,col="red")
+plot(d_sd_of_beta_I,col="blue",main="raw sd")
+lines(d_sd_of_beta_II,col="red")
+boxplot(beta,
+        las=2,                      # rotate x-axis labels
+        col=c("skyblue", "green")[pheno$Group],  # color by group
+        ylab='Beta values',
+        xlab='Samples',
+        main='Boxplot of Beta Values')
+
+plot(d_mean_of_beta_preprocessNoob_I,col="blue",main="preprocessNoob beta")
+lines(d_mean_of_beta_preprocessNoob_II,col="red")
+plot(d_sd_of_beta_preprocessNoob_I,col="blue",main="preprocessNoob sd")
+lines(d_sd_of_beta_preprocessNoob_II,col="red")
+boxplot(beta_preprocessNoob,
+        las=2,                      # rotate x-axis labels
+        col=c("skyblue", "green")[pheno$Group],  # color by group
+        ylab='Beta values',
+        xlab='Samples',
+        main='Boxplot of Normalised Beta Values')
+dev.off()
 ```
 
 ++Provide a short comment about the changes you observe.
@@ -122,6 +291,33 @@ Normalize the data using preprocessNoob and compare raw data and normalized data
 Perform a PCA on the matrix of normalized beta values generated in step 7. 
 
 ```{r results="hide", message=FALSE, warning=FALSE}
+pca_results <- prcomp(t(beta_preprocessNoob),scale=T)
+par(mfrow=c(1,1))
+plot(pca_results,main="PCA results",ylim=c(0,150000))
+pca_results$x
+
+plot(pca_results$x[,1],pca_results$x[,2],cex=1,pch=2,xlab="PC1",ylab="PC2",main='PCA', xlim=c(-1000,1000),ylim=c(-1000,1000))
+text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
+
+pheno$Group
+palette(c('orange','green'))
+plot(pca_results$x[,1],pca_results$x[,2],cex=1,pch=17,col=pheno$Group,main='PCA by group',xlab="PC1",ylab="PC2",xlim=c(-1000,1000),ylim=c(-1000,1000))
+text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
+legend('bottomright', legend=levels(pheno$Group), col=c(1:nlevels(pheno$Group)), pch=17)
+
+pheno$Sex
+pheno$Sex <- as.factor(pheno$Sex)
+palette(c('pink','aquamarine'))
+plot(pca_results$x[,1],pca_results$x[,2],cex=2,pch=17,col=pheno$Sex,main='PCA by sex',xlab="PC1",ylab="PC2",xlim=c(-1000,1000),ylim=c(-1000,1000))
+text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
+legend('bottomright', legend=levels(pheno$Sex), col=c(1:nlevels(pheno$Sex)), pch=17)
+
+pheno$Sentrix_ID
+pheno$Sentrix_ID <- as.factor(pheno$Sentrix_ID)
+palette(c('red','blue','green','yellow','purple'))
+plot(pca_results$x[,1],pca_results$x[,2],cex=2,pch=17,col=pheno$Sentrix_ID,main='PCA by Sentrix_ID',xlab="PC1",ylab="PC2",xlim=c(-1000,1000),ylim=c(-1000,1000))
+text(pca_results$x[,1], pca_results$x[,2], labels=(pheno$SampleID), cex=0.7, pos=1)
+legend('bottomright', legend=levels(pheno$Sentrix_ID), col=c(1:nlevels(pheno$Sentrix_ID)), pch=17)
 ```
 
 ++Comment the plot.
@@ -131,12 +327,61 @@ Perform a PCA on the matrix of normalized beta values generated in step 7.
 Using the matrix of normalized beta values generated in step 7, identify differentially methylated probes between CTRL and DIS groups using a t-test.
 
 ```{r results="hide", message=FALSE, warning=FALSE}
+t_test <- t.test(beta_preprocessNoob[1,] ~ pheno$Group)
+```
+
+We are interested in the p.value element of these lists. We use the apply() function to calculate the mean of each row of the matrix. However, unlike the mean() function, t.test() and wilcox.test() functions do not return a value, but a list; therefore, we have to create an ad hoc function:
+```{r results="hide", message=FALSE, warning=FALSE}
+My_ttest_function <- function(x) {
+  t_test <- t.test(x~ pheno$Group)
+  return(t_test$p.value)
+} 
+```
+
+Use of the function.
+```{r results="hide", message=FALSE, warning=FALSE}
+first20k_beta_preprocessNoob <- beta_preprocessNoob[1:20000,]
+pValues_ttest_20k <- apply(first20k_beta_preprocessNoob,1, My_ttest_function)
+pValues_ttest_20k
+```
+
+Creation of a data frame with all the beta values and the pValue column.
+```{r results="hide", message=FALSE, warning=FALSE}
+final_ttest_20k <- data.frame(first20k_beta_preprocessNoob, pValues_ttest_20k)
+```
+
+Organization of the probes on the basis of the pValue column.
+```{r results="hide", message=FALSE, warning=FALSE}
+final_ttest_20k <- final_ttest_20k[order(final_ttest_20k$pValues_ttest_20k),]
+head(final_ttest_20k)
+```
+
+Filter for significant probes
+```{r results="hide", message=FALSE, warning=FALSE}
+significant_ttest <- final_ttest_20k[final_ttest_20k$pValues_ttest_20k <= 0.05, ]
 ```
 
 ## 10. Multiple test correction
 Apply multiple test correction and set a significant threshold of 0.05.
 
 ```{r results="hide", message=FALSE, warning=FALSE}
+corrected_pValues_BH <- p.adjust(final_ttest_20k$pValues_ttest_20k,"BH")
+corrected_pValues_Bonf <- p.adjust(final_ttest_20k$pValues_ttest_20k,"bonferroni")
+final_ttest_20k_corrected <- data.frame(final_ttest_20k, corrected_pValues_BH, corrected_pValues_Bonf)
+head(finalttest_20k_corrected)
+```
+
+Visualization of the distributions of the p-values by boxplots.
+```{r results="hide", message=FALSE, warning=FALSE}
+colnames(final_ttest_20k_corrected)
+boxplot(final_ttest_20k_corrected[,9:11])
+```
+
+Determining the amount of probes that remain after the MTC.
+```{r results="hide", message=FALSE, warning=FALSE}
+dim(final_ttest_20k_corrected[final_ttest_20k_corrected$pValues_ttest<=0.05,])
+dim(final_ttest_20k_corrected[final_ttest_20k_corrected$corrected_pValues_BH<=0.05,])
+dim(final_ttest_20k_corrected[final_ttest_20k_corrected$corrected_pValues_Bonf<=0.05,])
 ```
 
 ++How many probes do you identify as differentially methylated considering nominal pValues? How many after Bonferroni correction? How many after BH correction?
@@ -144,15 +389,108 @@ Apply multiple test correction and set a significant threshold of 0.05.
 ## 11. Graphic the results of the differential methylation analysis.
 Produce a volcano plot and a Manhattan plot of the results of differential methylation analysis. 
 
-**a. Volcano plot**
+Preparation of the data.
 ```{r results="hide", message=FALSE, warning=FALSE}
+beta_first20k <- final_ttest_20k_corrected[,1:8]
+beta_first20k_ctrl <- beta_first20k[,pheno$Group=="CTRL"]
+mean_beta_first20k_ctrl <- apply(beta_first20k_ctrl,1,mean)
+beta_first20k_dis <- beta_first20k[,pheno$Group=="DIS"]
+mean_beta_first20k_dis <- apply(beta_first20k_dis,1,mean)
+```
+
+Calculation of the difference between average values.
+```{r results="hide", message=FALSE, warning=FALSE}
+delta_first20k <- mean_beta_first20k_dis-mean_beta_first20k_ctrl
+head(delta_first20k)
+```
+
+Creation of a data frame.
+```{r results="hide", message=FALSE, warning=FALSE}
+toVolcPlot <- data.frame(delta_first20k, -log10(final_ttest_20k_corrected$pValues_ttest))
+head(toVolcPlot)
+plot(toVolcPlot[,1], toVolcPlot[,2])
+```
+
+**a. Volcano plot**
+Highlight the probes with a nominal pValue<0.01 and a delta > 0.1.
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("Volcano_plot.pdf")
+plot(toVolcPlot[,1], toVolcPlot[,2],pch=16,cex=0.5,main='volcano plot')
+toHighlight <- toVolcPlot[toVolcPlot[,1]>0.1 & toVolcPlot[,2]>(-log10(0.05)),]
+head(toHighlight)
+points(toHighlight[,1], toHighlight[,2],pch=16,cex=0.7,col="red")
+dev.off()
 ```
 
 **b. Manhattan plot**
+
+Load of the result of a reduced t-test and the Manifest and merge this objects.
 ```{r results="hide", message=FALSE, warning=FALSE}
+load("~/Downloads/L6/final_ttest_reduced.RData")
+load('~/Downloads/L2/Illumina450Manifest_clean.RData')
+final_ttest_reduced <- data.frame(rownames(final_ttest_reduced),final_ttest_reduced)
+head(final_ttest_reduced)
+colnames(final_ttest_reduced)
+colnames(final_ttest_reduced)[1] <- "IlmnID"
+colnames(final_ttest_reduced)
+
+final_ttest_reduced_annotated <- merge(final_ttest_reduced, Illumina450Manifest_clean,by="IlmnID")
+dim(final_ttest_reduced)
+dim(Illumina450Manifest_clean)
+dim(final_ttest_reduced_annotated)
+str(final_ttest_reduced_annotated)
 ```
+
+Creation of the input fot the Manhattan plot.
+```{r results="hide", message=FALSE, warning=FALSE}
+input_Manhattan <- final_ttest_reduced_annotated[colnames(final_ttest_reduced_annotated) %in% c("IlmnID","CHR","MAPINFO","pValues_ttest")]
+dim(input_Manhattan)
+head(input_Manhattan)
+str(input_Manhattan$CHR)
+levels(input_Manhattan$CHR)
+order_chr <- c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","X","Y")
+input_Manhattan$CHR <- factor(input_Manhattan$CHR,levels=order_chr )
+levels(input_Manhattan$CHR)
+
+```
+
+Creation of the Manhattan plot.
+```{r results="hide", message=FALSE, warning=FALSE}
+input_Manhattan$CHR <- as.numeric(input_Manhattan$CHR)
+table(input_Manhattan$CHR)
+manhattan(input_Manhattan, snp="IlmnID",chr="CHR", bp="MAPINFO", p="pValues_ttest" )
+-log10(0.00001)
+pdf("Manhattan_plot.pdf")
+manhattan(input_Manhattan, snp="IlmnID",chr="CHR", bp="MAPINFO", p="pValues_ttest",annotatePval = 0.00001,col=rainbow(24) )
+dev.off()
+```
+
 
 ## 12. Heatmap
 Produce an heatmap of the top 100 significant, differentially methylated probes.
 ```{r results="hide", message=FALSE, warning=FALSE}
+pheno$Group
+colorbar <- c("green","orange","orange","green","orange","orange","green","green")
+```
+
+Compared the results of hierchical clustering using different methods.
+```{r results="hide", message=FALSE, warning=FALSE}
+input_heatmap=as.matrix(final_ttest_20k[1:100,1:8])
+heatmap.2(input_heatmap,col=terrain.colors(100),Rowv=T,Colv=T,dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F,main="Complete linkage")
+```
+
+Single
+```{r results="hide", message=FALSE, warning=FALSE}
+heatmap.2(input_heatmap,col=terrain.colors(100),Rowv=T,Colv=T,hclustfun = function(x) hclust(x,method = 'single'),dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F,main="Single linkage")
+```
+
+Average
+```{r results="hide", message=FALSE, warning=FALSE}
+heatmap.2(input_heatmap,col=terrain.colors(100),Rowv=T,Colv=T,hclustfun = function(x) hclust(x,method = 'average'),dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F,main="Average linkage")
+```
+
+Adjustment of the colors.
+```{r results="hide", message=FALSE, warning=FALSE}
+col2=colorRampPalette(c("green","black","red"))(100)
+heatmap.2(input_heatmap,col=col2,Rowv=T,Colv=T,dendrogram="both",key=T,ColSideColors=colorbar,density.info="none",trace="none",scale="none",symm=F)
 ```
