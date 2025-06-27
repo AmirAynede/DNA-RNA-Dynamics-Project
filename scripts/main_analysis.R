@@ -176,12 +176,6 @@ d_sd_of_beta_I <- density(sd_of_beta_I,)
 #d_sd_of_beta_II <- density(sd_of_beta_II) #doesn't work. We need to find out why- all na values should have been omited
 d_sd_of_beta_II <- density(na.omit(sd_of_beta_II))
 
-?preprocessNoob
-# According to the help page, the input can be an RGset  or MehylSet object. Let's load the RGset object:
-#load("~/Dropbox/DRD_2025/3/RGset.RData")
-#RGset
-?GenomicRatioSet
-
 preprocessNoob_results <- preprocessNoob(RGset)
 beta_preprocessNoob <- getBeta(preprocessNoob_results)
 save(beta_preprocessNoob, file = "beta_preprocessNoob.RData")
