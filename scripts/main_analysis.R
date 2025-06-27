@@ -54,7 +54,6 @@ dim(ProbeInfo_I)
 head(getProbeInfo(RGset, type = "II"))
 ProbeInfo_II <- data.frame(getProbeInfo(RGset, type = "II"))
 dim(ProbeInfo_II)
-350036+135476 #485512 (mention in manuscript)
 
 # Check probe with address 18756452
 ProbeInfo_I[ProbeInfo_I$AddressA == "18756452",]
@@ -132,9 +131,6 @@ pheno$SampleID <- paste(pheno$Sentrix_ID, pheno$Sentrix_Position, sep = "_")
 
 wt_samples <- pheno$SampleID[pheno$Group == "CTRL"]
 mut_samples <- pheno$SampleID[pheno$Group == "DIS"]
-
-beta_wt <- beta[, wt_samples]
-density_beta_wt <- density(apply(beta_wt, 1, mean, na.rm = TRUE), na.rm = TRUE)
 
 SampleSheet$Group
 beta_ctrl <- beta_df[SampleSheet$Group == "CTRL",]
