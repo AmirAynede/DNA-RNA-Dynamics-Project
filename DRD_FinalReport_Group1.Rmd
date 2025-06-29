@@ -173,7 +173,7 @@ controlStripPlot(RGset, controls = "NEGATIVE")
 ++COMMENT.
 
 ### c. Calculation of detection p-values
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, error=TRUE}
 Detection_pvalue <- detectionP(RGset)
 save(Detection_pvalue, file = "Detection_pvalue.RData")
 Over_Threshold <- Detection_pvalue > 0.05
@@ -484,7 +484,7 @@ dev.off()
 **b. Manhattan plot**
 
 Annotate dataframe with genome annotation for each CpG probe.
-```{r results="hide", message=FALSE, warning=FALSE}
+```{r results="hide", message=FALSE, warning=FALSE, error=TRUE}
 load('~/Dropbox/DRD_2025/2/Illumina450Manifest_clean.RData')
 final_ttest_corrected <- data.frame(rownames(final_ttest_corrected), final_ttest_corrected)
 colnames(final_ttest_corrected)[1] <- "IlmnID"
