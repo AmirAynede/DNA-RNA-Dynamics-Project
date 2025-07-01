@@ -1,8 +1,11 @@
 ---
 title: "DRD_FinalReport_Group1"
-author: Amir Aynede, Kian Keshani, Bianca Gustini, Yuri Dobrokhotov, Favour Osese Otoijamun, Priscilla Castro Vargas
-date: "2025-06-27"
-output: html_document
+author: Amir Aynede, Kian Keshani, Bianca Gustini, Yuri Dobrokhotov, Favour Osese
+  Otoijamun, Priscilla Castro Vargas
+date: "2025-06"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,17 +19,18 @@ date: "2025-06"
 ---
 
 # Introduction
+This project focuses on the analysis of DNA methylation data generated using the Illumina HumanMethylation450 BeadChip (450K array) to explore epigenetic differences between sample groups. Utilizing statistical tests, principal component analysis, and heatmap visualizations, the study aims to identify significant methylation patterns that may contribute to biological insights. This work was conducted as part of the DNA/RNA Dynamics course at the Università di Bologna, combining practical bioinformatics techniques with real epigenomic datasets to deepen understanding of epigenetic regulation mechanisms.
 
 # Analytical pipeline and R code
 
 ## STEP 0. BASIC PREPARATION (Environment Setting and Importing Libraries)
 
-# Set the proper working directory where the data is stored
+**Set the proper working directory where the data is stored**
 ```{r results="hide", message=FALSE, warning=FALSE}
 setwd("~/chunche/DRD_2025_Project")
 ```
 
-# Install and load the necessary packages
+**Install and load the necessary packages**
 ```{r results="hide", message=FALSE, warning=FALSE}
 library(minfi)
 library(minfiData)
@@ -35,32 +39,38 @@ library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(shinyMethyl)
 library(AnnotationDbi)
 library(sva)
-library(qqman)
 library(gplots)
 library(ggplot2)
+library(qqman)
+library(tinytex)
 install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 ```
 
 ## STEP 1. DATA IMPORT AND OBJECT CREATION
 Load raw data with minfi and create an object called RGset storing the RGChannelSet object.
 
+**List files in the folder**
+```{r results="hide", message=FALSE, warning=FALSE}
+list.files("./data/raw/")
+```
+
 **Load the sample sheet**
 ```{r results="hide", message=FALSE, warning=FALSE}
-SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv",header=T)
+SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv", header = TRUE)
 SampleSheet
 ```
 
 **Load sample sheet using minfi's function**
 ```{r results="hide", message=FALSE, warning=FALSE}
 baseDir <- ("./data/raw")
-targets <- read.metharray.sheet(baseDir) 
+targets <- read.metharray.sheet(baseDir)
 targets
 ```
 
 **Create RGChannelSet object**
 ```{r results="hide", message=FALSE, warning=FALSE}
 RGset <- read.metharray.exp(targets = targets)
-save(RGset,file="RGset_Report.RData")
+save(RGset, file = "RGset_Report.RData")
 load("RGset_Report.RData")
 ```
 
@@ -73,7 +83,7 @@ str(RGset)
 ## STEP 2. EXTRACT RED AND GREEN CHANNELS
 Create dataframes to store the red and green fluorescences.
 
-**Extract fluorescence intensity info for Red and Green channels**
+**Extract fluorescence intensity information for Red and Green channels**
 ```{r results="hide", message=FALSE, warning=FALSE}
 Red <- data.frame(getRed(RGset))
 dim(Red)
@@ -83,7 +93,7 @@ dim(Green)
 head(Green)
 ```
 
-## STEP 3. PROBE INFO AND ADDRESS CHECKS 
+## STEP 3. PROBE INFORMATION AND ADDRESS CHECKS 
 Determine whether address 18756452 belongs to a Type I or Type II probe by retrieving the red and green fluorescence values for this address and checking the manifest file.
 
 **Explore manifest and probe information**
@@ -103,17 +113,30 @@ dim(ProbeInfo_II)
 ProbeInfo_I[ProbeInfo_I$AddressA == "18756452",]
 ProbeInfo_I[ProbeInfo_I$AddressB == "18756452",]
 ProbeInfo_II[ProbeInfo_II$AddressB == "18756452",]
-Probe_Info_18756452 <- ProbeInfo_II[ProbeInfo_II$AddressA == "18756452",]
+ProbeInfo_II[ProbeInfo_II$AddressA == "18756452",]
 ```
+
+There is a Type II probe at address 18756452, identified by the name cg01523029.
 
 **Extract Red/Green fluorescence for address 18756452**
 ```{r results="hide", message=FALSE, warning=FALSE}
+Probe_Info_18756452 <- ProbeInfo_II[ProbeInfo_II$AddressA == "18756452",]
 Red_fluorescences <- Red[rownames(Red) == "18756452",]
 Green_fluorescences <- Green[rownames(Green) == "18756452",]
 ```
 
-++ FILL THE FOLLOWING TABLE.
-++ ANSWER TO PROBE.
+**Use sample names from the column names of Red/Green (same order) and create summary dataframe to fill the requested table**
+```{r results="hide", message=FALSE, warning=FALSE}
+sample_names <- colnames(Red_fluorescences)
+df_summary_probes <- data.frame(
+  "Sample" = sample_names,
+  "Red Fluorescence" = as.numeric (Red_fluorescences[1, ]),
+  "Green Fluorescence" = as.numeric (Green_fluorescences[1,]),
+  "Type" = rep("II", length(sample_names)),
+  "Color" = rep("Both", length(sample_names))
+)
+print(df_summary_probes)
+```
 
 ## STEP 4. Creation of the MSet.raw oject
 
@@ -141,14 +164,6 @@ Illumina450Manifest_clean <- droplevels(Illumina450Manifest_clean)
 Probe_Info_cg01523029 <- Illumina450Manifest_clean[Illumina450Manifest_clean$IlmnID == "cg01523029",]
 ```
 
-**Out-of-band signals: compare RGset and Methset for cg01523029**
-```{r results="hide", message=FALSE, warning=FALSE}
-Red[rownames(Red) == "18756452",]
-Green[rownames(Green) == "18756452",]
-Unmeth[rownames(Unmeth) == "cg01523029",]
-Meth[rownames(Meth) == "cg01523029",]
-```
-
 ## 5. Quality control
 Perform quality checks and provide a brief comment to each step. 
 
@@ -160,39 +175,52 @@ qc
 plotQC(qc)
 dev.off()
 ```
-++COMMENT.
+
+**Comment**
+A QC plot displays the distribution of methylated and unmethylated signal medians. High median values for both signals indicate high-quality data. In this case, the samples are spread apart, and most show low median values for both signals, suggesting poor quality. Out of the eight samples, only three are considered to be of good quality.
 
 ### b. Check the intensity of negative controls
 ```{r message=FALSE, warning=FALSE}
-getProbeInfo(RGset, type = "Control")
+pdf("ControlStripPlot.pdf")
 NegativeControl <- data.frame(getProbeInfo(RGset, type = "Control"))
 table(NegativeControl$Type)
-#head(getProbeInfo(RGset, type = "Control")) - #ensuring RGset contains control probes
+head(NegativeControl) 
 controlStripPlot(RGset, controls = "NEGATIVE")
+dev.off()
 ```
-++COMMENT.
+**Comment**
+In this case, the negative control signals show intensity values (log2) below 10 in both the red and green channels, which is considered acceptable.
 
 ### c. Calculation of detection p-values
-```{r message=FALSE, warning=FALSE, error=TRUE}
+```{r message=FALSE, warning=FALSE}
 Detection_pvalue <- detectionP(RGset)
 save(Detection_pvalue, file = "Detection_pvalue.RData")
 Over_Threshold <- Detection_pvalue > 0.05
 head(Over_Threshold)
 table(Over_Threshold)
 sum(Over_Threshold)
-paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(Over_Threshold)))
+failed_probe_message <- sprintf(
+  "There are %s failed probes with a detection p-value higher than 0.05",
+  sum(Over_Threshold)
+)
 Over_Threshold_Per_Sample <- colSums(Over_Threshold)
 Over_Threshold_Per_Sample
 summary(Over_Threshold)
+failed <- data.frame(
+  Sample = names(Over_Threshold_Per_Sample),
+  n_Failed_Positions = Over_Threshold_Per_Sample
+)
+print(failed)
+print(failed_probe_message)
 ```
 
-++COMMENT.
-++how many probes have a detection p-value higher than 0.05?
-
+**Comment**
+There are 6283 failed probes with a detection p-value higher than 0.05 and the number of failed positions ranges from 202-2735 per sample.
 
 ## STEP 6. Calculation of Beta and M values, Plot Densities
 Calculate raw beta and M values and plot the densities of mean methylation values, dividing the samples in CTRL and DIS (suggestion: subset the beta and M values matrixes in order to retain CTRL or DIS subjects and apply the function mean to the 2 subsets). 
 
+**Data preparation**
 ```{r message=FALSE, warning=FALSE}
 beta <- getBeta(MSet.raw)
 M <- getM(MSet.raw)
@@ -200,13 +228,6 @@ beta_df <- data.frame(beta)
 M_df <- data.frame(M)
 
 pheno <- read.csv("data/raw/SampleSheet_Report_II.csv", header = TRUE, stringsAsFactors = TRUE)
-pheno$SampleID <- paste(pheno$Sentrix_ID, pheno$Sentrix_Position, sep = "_")
-
-wt_samples <- pheno$SampleID[pheno$Group == "CTRL"]
-mut_samples <- pheno$SampleID[pheno$Group == "DIS"]
-
-beta_wt <- beta[, wt_samples]
-density_beta_wt <- density(apply(beta_wt, 1, mean, na.rm = TRUE), na.rm = TRUE)
 
 SampleSheet$Group
 beta_ctrl <- beta_df[SampleSheet$Group == "CTRL",]
@@ -222,34 +243,43 @@ mean_of_M_dis <- apply(M_dis, 1, mean, na.rm = TRUE)
 
 **Plotting the density of mean methylation values.**
 ```{r message=FALSE, warning=FALSE}
-dev.new()
-par(mfrow = c(1, 2))
-plot(density(mean_of_beta_ctrl, na.rm = TRUE), main = "Density of Beta Values", col = "black")
-lines(density(mean_of_beta_dis, na.rm = TRUE), col = "orange")
-
-plot(density(mean_of_M_ctrl, na.rm = TRUE), main = "Density of M Values", col = "black")
-lines(density(mean_of_M_dis, na.rm = TRUE), col = "orange")
+pdf("Beta_M_Density_Plots.pdf")
+plot_density <- function() {
+  par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))  
+  plot(density(mean_of_beta_ctrl, na.rm = TRUE), main = "Density of Beta Values", col = "black", lwd = 2)
+  lines(density(mean_of_beta_dis, na.rm = TRUE), col = "orange", lwd = 2)
+  legend("top", legend = c("CTL", "DIS"),
+         col = c("black", "orange"), lwd = 2,
+         cex = 0.9, bty = "n", inset = c(-0.01, -0.01))
+  plot(density(mean_of_M_ctrl, na.rm = TRUE), main = "Density of M Values", col = "black", lwd = 2)
+  lines(density(mean_of_M_dis, na.rm = TRUE), col = "orange", lwd = 2)
+  legend("topright", legend = c("CTL", "DIS"),
+         col = c("black", "orange"), lwd = 2,
+         cex = 0.9, bty = "n", inset = c(-0.01, -0.01))
+}
+plot_density()
+dev.off()
 ```
-
-++ Do you see any difference between the two groups?
+**Comment**
+Based on the density plots of mean methylation, no clear differences were observed between the control and disease groups. This could suggest that there are no significant differences in methylation levels between the two. However, further statistical analyses are necessary to better interpret the data and potentially uncover subtle or localized differences.
 
 ## STEP 7. Data normalization with preprocessNoob
 Normalize the data using preprocessNoob and compare raw data and normalized data. Produce a plot with 6 panels in which, for both raw and normalized data, you show the density plots of beta mean values according to the chemistry of the probes, the density plot of beta standard deviation values according to the chemistry of the probes and the boxplot of beta values. 
 
 **Subset beta values by probe type**
 ```{r message=FALSE, warning=FALSE}
-dfI <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type=="I",]
+dfI <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type == "I",]
 dfI <- droplevels(dfI)
-dfII <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type=="II",]
+dfII <- Illumina450Manifest_clean[Illumina450Manifest_clean$Infinium_Design_Type == "II",]
 dfII <- droplevels(dfII)
 
 beta_I <- beta[rownames(beta) %in% dfI$IlmnID,]
 beta_II <- beta[rownames(beta) %in% dfII$IlmnID,]
 
-mean_of_beta_I <- apply(beta_I,1,mean)
-mean_of_beta_II <- apply(beta_II,1,mean)
-d_mean_of_beta_I <- density(mean_of_beta_I,na.rm=T)
-d_mean_of_beta_II <- density(mean_of_beta_II,na.rm=T)
+mean_of_beta_I <- apply(beta_I, 1, mean)
+mean_of_beta_II <- apply(beta_II, 1, mean)
+d_mean_of_beta_I <- density(mean_of_beta_I, na.rm = TRUE)
+d_mean_of_beta_II <- density(mean_of_beta_II, na.rm = TRUE)
 ```
 
 **Calculation of the densities of the standard deviations**
@@ -258,21 +288,12 @@ This can be calculated using the function sd():
 sd_of_beta_I <- apply(beta_I, 1, sd, na.rm = TRUE)
 sd_of_beta_II <- apply(beta_II, 1, sd, na.rm = TRUE)
 d_sd_of_beta_I <- density(sd_of_beta_I,)
-#d_sd_of_beta_II <- density(sd_of_beta_II) #doesn't work. We need to find out why- all na values should have been omited
 d_sd_of_beta_II <- density(na.omit(sd_of_beta_II))
 ```
 
 **Use of preprocessNoob**
+Preparation of the data.
 ```{r results="hide", message=FALSE, warning=FALSE}
-?preprocessNoob
-```
-
-According to the help page, the input can be an RGset or MehylSet object, so proceed to load the RGset object.
-```{r results="hide", message=FALSE, warning=FALSE}
-#load("~/Dropbox/DRD_2025/3/RGset.RData")
-#RGset
-?GenomicRatioSet
-
 preprocessNoob_results <- preprocessNoob(RGset)
 beta_preprocessNoob <- getBeta(preprocessNoob_results)
 save(beta_preprocessNoob, file = "beta_preprocessNoob.RData")
@@ -292,98 +313,166 @@ d_sd_of_beta_preprocessNoob_I <- density(sd_of_beta_preprocessNoob_I, na.rm = TR
 d_sd_of_beta_preprocessNoob_II <- density(sd_of_beta_preprocessNoob_II, na.rm = TRUE)
 ```
 
-**Plot the data**
-```{r results="hide", message=FALSE, warning=FALSE}
-#pdf("Plot_comparison_raw_preprocessNoob.pdf", height = 7, width = 15)
-#par(mfrow = c(2, 3))
-plot(d_mean_of_beta_I, col = "blue", main = "raw beta")
-lines(d_mean_of_beta_II, col = "red")
-plot(d_sd_of_beta_I, col = "blue", main = "raw sd")
-lines(d_sd_of_beta_II, col = "red")
-boxplot(beta)
+**Boxplot visualization by group**
+### Comparison of Raw and Normalized Beta Values
 
-plot(d_mean_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob beta")
-lines(d_mean_of_beta_preprocessNoob_II, col = "red")
-plot(d_sd_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob sd")
-lines(d_sd_of_beta_preprocessNoob_II, col = "red")
-boxplot(beta_preprocessNoob)
-```
+This section displays the distribution of beta values before and after normalization with `preprocessNoob`. Each row of plots corresponds to raw and normalized data, respectively.
 
-**Improve the boxplot visualization by group**
-```{r results="hide", message=FALSE, warning=FALSE}
-("Plot_comparison_raw_preprocessNoob control vs disease.pdf", height = 7, width = 15)
+```{r fig.height=8, fig.width=14, message=FALSE, warning=FALSE}
+pdf("comparison_raw_vs_preprocessNoob.pdf", width = 15, height = 7)
 par(mfrow = c(2, 3))
-plot(d_mean_of_beta_I, col = "blue", main = "raw beta")
-lines(d_mean_of_beta_II, col = "red")
-plot(d_sd_of_beta_I, col = "blue", main = "raw sd")
-lines(d_sd_of_beta_II, col = "red")
-boxplot(beta,
-        las = 2,
-        col = c("green", "magenta")[pheno$Group],
-        ylab = 'Beta values',
-        xlab = 'Samples',
-        main = 'Boxplot of Beta Values')
 
+# Plot 1
+plot(d_mean_of_beta_I, col = "blue", main = "Raw beta")
+lines(d_mean_of_beta_II, col = "red")
+legend("topright",
+       legend = c("Probe Type I", "Probe Type II"),
+       col = c("blue", "red"),
+       lwd = 2,
+       cex = 0.9,
+       inset = c(0.01, 0.01))
+
+# Plot 2
+plot(d_sd_of_beta_I, col = "blue", main = "Raw sd")
+lines(d_sd_of_beta_II, col = "red")
+legend("topright",
+       legend = c("Probe Type I", "Probe Type II"),
+       col = c("blue", "red"),
+       lwd = 2,
+       cex = 0.9,
+       inset = c(0.01, 0.01))
+
+# Plot 3
+boxplot(beta,
+        las=1,                      
+        col=c("green", "magenta")[pheno$Group], 
+        ylab='Beta values',
+        xlab='Samples',
+        main='Boxplot of Beta Values')
+legend("bottom", 
+       legend = c("Control", "Disease"),
+       fill = c("green", "magenta"),
+       horiz = TRUE,
+       bty = 'n',
+       inset = -0.25,       
+       xpd = TRUE,          
+       cex = 0.9)
+
+# Plot 4
 plot(d_mean_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob beta")
 lines(d_mean_of_beta_preprocessNoob_II, col = "red")
+legend("topright",
+       legend = c("Probe Type I", "Probe Type II"),
+       col = c("blue", "red"),
+       lwd = 2,
+       cex = 0.9,
+       inset = c(0.01, 0.01))
+
+# Plot 5
 plot(d_sd_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob sd")
 lines(d_sd_of_beta_preprocessNoob_II, col = "red")
+legend("topright",
+       legend = c("Probe Type I", "Probe Type II"),
+       col = c("blue", "red"),
+       lwd = 2,
+       cex = 0.9,
+       inset = c(0.01, 0.01))
+
+# Plot 6
 boxplot(beta_preprocessNoob,
-        las = 2,
-        col = c("green", "magenta")[pheno$Group],
-        ylab = 'Beta values',
-        xlab = 'Samples',
-        main = 'Boxplot of Normalised Beta Values')
+        las=1,                      
+        col=c("green", "magenta")[pheno$Group], 
+        ylab='Beta values',
+        xlab='Samples',
+        main='Boxplot of Normalised Beta Values')
+legend("bottom", 
+       legend = c("Control", "Disease"),
+       fill = c("green", "magenta"),
+       horiz = TRUE,
+       bty = 'n',
+       inset = -0.25,       
+       xpd = TRUE,          
+       cex = 0.9)
 dev.off()
 ```
 
-++Provide a short comment about the changes you observe.
-++Do you think that the normalization approach that you used is appropriate considering this specific dataset? Try to color the boxplots according to the group (WT and MUT) and check whether the distribution of methylation values is different between the two groups, before and after normalization … 
+**Comment**
+preprocessNoob is a normalization method designed to correct background fluorescence and dye bias. It is known as a “light” normalization technique, meaning it applies minimal transformation to the data while still addressing key technical artifacts.
+
+After applying it, the density plots show that the probe type distributions are slightly more aligned, indicating improved consistency. However, the boxplots reveal a larger interquartile range and non-uniform medians across samples, suggesting that some variability remains uncorrected.
+
+Given these results, preprocessNoob may not be the most suitable normalization method for this dataset. While it improves background correction, other methods may better address sample variability and ensure comparability.
 
 ## STEP 8. Principal Component Analysis
 Perform a PCA on the matrix of normalized beta values generated in step 7. 
 
 **Perform PCA on normalized beta values**
 ```{r results="hide", message=FALSE, warning=FALSE}
-pca_results <- prcomp(t(beta_preprocessNoob),scale=T)
-par(mfrow=c(1,1))
-plot(pca_results,main="PCA results",ylim=c(0,150000))
-pca_results$x
+pca_results <- prcomp(t(beta_preprocessNoob), scale = TRUE)
+pca_var <- pca_results$sdev^2
+pca_var_explained <- pca_var / sum(pca_var)
+barplot(pca_var_explained[1:10], 
+        names.arg = paste0("PC", 1:10),
+        col = "blue",
+        main = "Scree Plot: Variance Explained by PCs",
+        xlab = "Principal Components",
+        ylab = "Proportion of Variance Explained",
+        las = 2)
 ```
 
-**Plot PCA by group, sex, and Sentrix_ID**
+**Plot PCA by Group**
 ```{r results="hide", message=FALSE, warning=FALSE}
-pheno$Group
+par(mfrow = c(1, 1)) 
+pdf("PCA_by_group.pdf")
 palette(c('orange', 'green'))
 plot(pca_results$x[, 1], pca_results$x[, 2], cex = 1, pch = 17, col = pheno$Group, main = 'PCA by group', xlab = "PC1", ylab = "PC2", xlim = c(-1000, 1000), ylim = c(-1000, 1000))
 text(pca_results$x[, 1], pca_results$x[, 2], labels = (pheno$SampleID), cex = 0.7, pos = 1)
 legend('bottomright', legend = levels(pheno$Group), col = c(1:nlevels(pheno$Group)), pch = 17)
+dev.off()
+```
+**Comment**
+Unfortunately, the PCA analysis does not show a clear separation between the wild-type (CTRL) and mutated (DIS) groups. While the control samples cluster closely together, the disease samples are more dispersed across the plot.
 
+**Plot PCA by Sex**
+```{r results="hide", message=FALSE, warning=FALSE}
 pheno$Sex
 pheno$Sex <- as.factor(pheno$Sex)
+pdf('PCA_by_sex.pdf')
 palette(c('pink', 'aquamarine'))
 plot(pca_results$x[, 1], pca_results$x[, 2], cex = 2, pch = 17, col = pheno$Sex, main = 'PCA by sex', xlab = "PC1", ylab = "PC2", xlim = c(-1000, 1000), ylim = c(-1000, 1000))
 text(pca_results$x[, 1], pca_results$x[, 2], labels = (pheno$SampleID), cex = 0.7, pos = 1)
 legend('bottomright', legend = levels(pheno$Sex), col = c(1:nlevels(pheno$Sex)), pch = 17)
+dev.off()
+```
+**Comment**
+In this PCA analysis, a cleare separation between female and male groups can be observed. The female samples cluster closely together, with the exception of one outlier (GMS5319609).
 
+**Plot PCA by Sentrix_ID**
+```{r results="hide", message=FALSE, warning=FALSE}
 pheno$Sentrix_ID
 pheno$Sentrix_ID <- as.factor(pheno$Sentrix_ID)
+pdf('PCA_by_Sentrix_ID.pdf')
 palette(c('red', 'blue', 'green', 'yellow', 'purple'))
 plot(pca_results$x[, 1], pca_results$x[, 2], cex = 2, pch = 17, col = pheno$Sentrix_ID, main = 'PCA by Sentrix_ID', xlab = "PC1", ylab = "PC2", xlim = c(-1000, 1000), ylim = c(-1000, 1000))
 text(pca_results$x[, 1], pca_results$x[, 2], labels = (pheno$SampleID), cex = 0.7, pos = 1)
 legend('bottomright', legend = levels(pheno$Sentrix_ID), col = c(1:nlevels(pheno$Sentrix_ID)), pch = 17)
+dev.off()
 ```
 
-++Comment the plot.
-++Do you see any outlier? Do the samples divide according to the group? Do they divide according to the sex of the samples? Do they divide according to the batch, that is the column Sentrix_ID?). 
+**Comment**
+Five batches were identified. The PCA shows clustering; however, there are almost as many batches as there are samples. This makes it difficult to determine whether the variability observed in the experimental results is due to batch effects. A larger sample size would be needed to confirm this.
+
 
 **Additional PCA visualizations**
 ```{r results="hide", message=FALSE, warning=FALSE}
 pca <- prcomp(beta_preprocessNoob, scale = TRUE)
 par(mfrow = c(1, 1))
-plot(pca$x[, 1], pca$x[, 2], cex = 2, pch = 18, xlab = "PC1", ylab = "PC2", xlim = c(-500, 800), main = "PCA")
+plot(pca$x[, 1], pca$x[, 2], cex = 2, pch = 18, xlab = "PC1", ylab = "PC2", xlim = c(-5, 7), main = "PCA")
 text(pca$x[, 1], pca$x[, 2], labels = rownames(pca$x), pos = 4, cex = 0.5)
+```
 
+**PCA with ggplot2**
+```{r results="hide", message=FALSE, warning=FALSE}
 pcr <- data.frame(pca$rotation[, 1:3], Group = targets$Group)
 ggplot(pcr, aes(PC1, PC2, color = Group)) + geom_point(size = 4)
 pcr <- data.frame(pca$rotation[, 1:3], Group = targets$Sex)
@@ -442,8 +531,18 @@ head(final_ttest_corrected)
 
 **Visualize distributions of p-values and corrected p-values**
 ```{r results="hide", message=FALSE, warning=FALSE}
-colnames(final_ttest_20k_corrected)
-boxplot(final_ttest_20k_corrected[,9:11])
+colnames(final_ttest_corrected)
+box_colors <- c("skyblue", "lightgreen", "salmon")
+boxplot(final_ttest_corrected[, 9:11],
+        main = "Distribution of Raw and Corrected p-values",
+        ylab = "p-values",
+        xlab = "Correction Method",
+        col = box_colors,
+        names = c("Raw", "BH", "Bonferroni"))
+legend("bottomright",
+       legend = c("Raw", "BH", "Bonferroni"),
+       fill = box_colors,
+       cex = 0.8)
 ```
 
 **Determining the amount of probes that remain after the MTC**
@@ -453,39 +552,58 @@ dim(final_ttest_corrected[final_ttest_corrected$corrected_pValues_BH <= 0.05, ])
 dim(final_ttest_corrected[final_ttest_corrected$corrected_pValues_Bonf <= 0.05, ])
 ```
 
-++How many probes do you identify as differentially methylated considering nominal pValues? How many after Bonferroni correction? How many after BH correction?
+**Comment**
+11,928 probes with a nominal p-value below 0.05 before applying any multiple testing correction were identified. However, after applying Bonferroni and Benjamini-Hochberg (BH) corrections, no probes remained significant at the 0.05 threshold. This suggests that while many probes appeared significant before correction, these results may be due to chance, highlighting the importance of correcting for multiple testing in high-dimensional data like DNA methylation.
+
 
 ## STEP 11. Graphic the results of the differential methylation analysis.
 Produce a volcano plot and a Manhattan plot of the results of differential methylation analysis. 
 
 **a. Volcano plot**
 
-Creation of the Volcano plot.
+Preparation of the data
 ```{r results="hide", message=FALSE, warning=FALSE}
 beta_first <- final_ttest_corrected[, 1:8]
 beta_first_ctrl <- beta_first[, pheno$Group == "CTRL"]
-mean_beta_first_ctrl <- apply(beta_first_ctrl, 1, mean)
 beta_first_dis <- beta_first[, pheno$Group == "DIS"]
+mean_beta_first_ctrl <- apply(beta_first_ctrl, 1, mean)
 mean_beta_first_dis <- apply(beta_first_dis, 1, mean)
 delta_first <- mean_beta_first_dis - mean_beta_first_ctrl
-toVolcPlot <- data.frame(delta_first, -log10(final_ttest_corrected$pValues_ttest))
-plot(toVolcPlot[, 1], toVolcPlot[, 2])
+toVolcPlot <- data.frame(
+  delta_beta = delta_first,
+  negLog10p = -log10(final_ttest_corrected$pValues_ttest)
+)
 ```
 
-Highlight the probes with a nominal pValue<0.01 and a delta > 0.1.
+Volcano plot with highlight of hypermethylated (Delta Beta > 0.1 & p < 0.05) and hypomethylated (Delta Beta < -0.1 & p < 0.05)
 ```{r results="hide", message=FALSE, warning=FALSE}
 pdf("Volcano_plot.pdf")
-plot(toVolcPlot[, 1], toVolcPlot[, 2], pch = 16, cex = 0.5, main = 'volcano plot')
-toHighlight <- toVolcPlot[toVolcPlot[, 1] > 0.1 & toVolcPlot[, 2] > (-log10(0.05)), ]
-points(toHighlight[, 1], toHighlight[, 2], pch = 16, cex = 0.7, col = "red")
+plot(toVolcPlot$delta_beta, toVolcPlot$negLog10p,
+     pch = 16, cex = 0.5,
+     xlab = "Delta Beta (DIS - CTRL)",
+     ylab = "-log10(p-value)",
+     main = "Volcano Plot of Methylation Differences")
+hyper <- which(toVolcPlot$delta_beta > 0.1 & final_ttest_corrected$pValues_ttest < 0.05)
+points(toVolcPlot$delta_beta[hyper],
+       toVolcPlot$negLog10p[hyper],
+       col = "red", pch = 16, cex = 0.6)
+hypo <- which(toVolcPlot$delta_beta < -0.1 & final_ttest_corrected$pValues_ttest < 0.05)
+points(toVolcPlot$delta_beta[hypo],
+       toVolcPlot$negLog10p[hypo],
+       col = "blue", pch = 16, cex = 0.6)
+
+abline(h = -log10(0.05), col = "darkgray", lty = 2)  # p = 0.05
+abline(v = c(-0.1, 0.1), col = "darkgray", lty = 2)  # Delta Beta = ±0.1
+legend("topright", legend = c("Hypermethylated", "Hypomethylated"),
+       col = c("red", "blue"), pch = 16, bty = "n")
 dev.off()
 ```
 
 **b. Manhattan plot**
 
 Annotate dataframe with genome annotation for each CpG probe.
-```{r results="hide", message=FALSE, warning=FALSE, error=TRUE}
-load('~/Dropbox/DRD_2025/2/Illumina450Manifest_clean.RData')
+```{r results="hide", message=FALSE, warning=FALSE}
+load('~/Downloads/L2/Illumina450Manifest_clean.RData')
 final_ttest_corrected <- data.frame(rownames(final_ttest_corrected), final_ttest_corrected)
 colnames(final_ttest_corrected)[1] <- "IlmnID"
 final_ttest_corrected_annotated <- merge(final_ttest_corrected, Illumina450Manifest_clean, by = "IlmnID")
@@ -499,32 +617,72 @@ manhattan(input_Manhattan, snp = "IlmnID", chr = "CHR", bp = "MAPINFO", p = "pVa
 dev.off()
 ```
 
-
 ## 12. Heatmap
 Produce an heatmap of the top 100 significant, differentially methylated probes.
 
+**Define colorbar from phenotype group and custom color palette**
 ```{r results="hide", message=FALSE, warning=FALSE}
-colorbar <- c("green", "orange", "orange", "green", "orange", "orange", "green", "green")
+colorbar <- pheno$Group
+colorbar <- as.character(factor(colorbar, labels = c("royalblue", "orange")))
 input_heatmap = as.matrix(final_ttest[1:100, 1:8])
-```
-
-Complete linkage (default).
-```{r results="hide", message=FALSE, warning=FALSE}
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Complete linkage")
-```
-
-Single linkage.
-```{r results="hide", message=FALSE, warning=FALSE}
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, hclustfun = function(x) hclust(x, method = 'single'), dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Single linkage")
-```
-
-Average linkage.
-```{r results="hide", message=FALSE, warning=FALSE}
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, hclustfun = function(x) hclust(x, method = 'average'), dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Average linkage")
-```
-
-Custom of the colors.
-```{r results="hide", message=FALSE, warning=FALSE}
 col2 = colorRampPalette(c("green", "black", "red"))(100)
-heatmap.2(input_heatmap, col = col2, Rowv = TRUE, Colv = TRUE, dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE)
+```
+
+**Complete linkage**
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("heatmap_complete_linkage.pdf")
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Complete Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
+dev.off()
+```
+
+**Single linkage**
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("heatmap_single_linkage.pdf")
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          hclustfun = function(x) hclust(x, method = "single"),
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Single Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
+dev.off()
+```
+
+**Average linkage**
+```{r results="hide", message=FALSE, warning=FALSE}
+pdf("heatmap_average_linkage.pdf")
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          hclustfun = function(x) hclust(x, method = "average"),
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Average Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
+dev.off()
 ```
