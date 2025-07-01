@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it as below."
+title: "DRD_2025_Project: Educational pipeline for DNA methylation analysis"
+authors:
+  - family-names: Keshani
+    given-names: Kianoush
+  - family-names: Castro Vargas
+    given-names: Priscilla
+  - family-names: Gustini
+    given-names: Bianca
+  - family-names: MohammadNejad Aynede
+    given-names: Amirhossein
+  - family-names: Dobrokhotov
+    given-names: Iiuri
+  - family-names: Otoijamun
+    given-names: Favour
+version: "1.0.0"
+date-released: 2025-06-05
+url: "https://github.com/kianinsilico/DRD_2025_Project"
+repository-code: "https://github.com/kianinsilico/DRD_2025_Project"
+license: "CC-BY-NC-SA-4.0"
+type: "software"
