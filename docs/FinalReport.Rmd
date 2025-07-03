@@ -87,8 +87,8 @@ targets
 **Create RGChannelSet object**
 ```{r results="hide", message=FALSE, warning=FALSE}
 RGset <- read.metharray.exp(targets = targets)
-save(RGset, file = "../data/processed/RGset_Report.RData")
-load("../data/processed/RGset_Report.RData")
+save(RGset, file = "../data/processed/RGChannelSet.RData")
+load("../data/processed/RGChannelSet.RData")
 ```
 
 **Explore the RGset object**
