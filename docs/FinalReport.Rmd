@@ -1,6 +1,7 @@
 ---
 title: "DRD Final Report - Group 1"
-author: "Keshani, K., Castro Vargas, P., Gustini, B., Aynede, A., Dobrokhotov, I., & Otoijamun, F."
+author: Keshani, K., Castro Vargas, P., Gustini, B., Aynede, A., Dobrokhotov, I.,
+  & Otoijamun, F.
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -12,10 +13,14 @@ output:
     includes:
       in_header: preamble.tex
     fig_caption: true
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
 fontsize: 11pt
 geometry: margin=1in
-mainfont: "Times New Roman"
-monofont: "Courier New"
+mainfont: Times New Roman
+monofont: Courier New
 ---
 
 
@@ -55,26 +60,26 @@ library(sva)
 library(gplots)
 library(qqman)
 library(tinytex)
-install.packages("lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
+install.packages("../lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)
 ```
 
 ## STEP 1. DATA IMPORT AND OBJECT CREATION
 Load raw data with minfi and create an object called RGset storing the RGChannelSet object.
 
-**List files in the folder**
+**List files in data directory**
 ```{r results="hide", message=FALSE, warning=FALSE}
-list.files("./data/raw/")
+list.files("../data/raw/")
 ```
 
 **Load the sample sheet**
 ```{r results="hide", message=FALSE, warning=FALSE}
-SampleSheet <- read.csv("./data/raw/SampleSheet_Report_II.csv", header = TRUE)
+SampleSheet <- read.csv("../data/raw/SampleSheet_Report_II.csv", header = TRUE)
 SampleSheet
 ```
 
 **Load sample sheet using minfi's function**
 ```{r results="hide", message=FALSE, warning=FALSE}
-baseDir <- ("./data/raw")
+baseDir <- ("../data/raw")
 targets <- read.metharray.sheet(baseDir)
 targets
 ```
@@ -82,8 +87,8 @@ targets
 **Create RGChannelSet object**
 ```{r results="hide", message=FALSE, warning=FALSE}
 RGset <- read.metharray.exp(targets = targets)
-save(RGset, file = "./data/processed/RGset_Report.RData")
-load("./data/processed/RGset_Report.RData")
+save(RGset, file = "../data/processed/RGset_Report.RData")
+load("../data/processed/RGset_Report.RData")
 ```
 
 **Explore the RGset object**
@@ -156,7 +161,7 @@ print(df_summary_probes)
 ```{r results="hide", message=FALSE, warning=FALSE}
 MSet.raw <- preprocessRaw(RGset)
 MSet.raw
-save(MSet.raw, file = "./data/processed/MSet_raw.RData")
+save(MSet.raw, file = "../data/processed/MSet_raw.RData")
 Meth <- as.matrix(getMeth(MSet.raw))
 str(Meth)
 head(Meth)
@@ -170,7 +175,7 @@ head(Unmeth)
 Unmeth[rownames(Unmeth) == "cg01523029",]
 Meth[rownames(Meth) == "cg01523029",]
 
-load("data/raw/Illumina450Manifest.RData")
+load("../data/raw/Illumina450Manifest.RData")
 Illumina450Manifest_clean <- Illumina450Manifest[Illumina450Manifest$CHR != "",]
 Illumina450Manifest_clean <- droplevels(Illumina450Manifest_clean)
 Probe_Info_cg01523029 <- Illumina450Manifest_clean[Illumina450Manifest_clean$IlmnID == "cg01523029",]
@@ -203,7 +208,7 @@ In this case, the negative control signals show intensity values (log2) below 10
 ### c. Calculation of detection p-values
 ```{r message=FALSE, warning=FALSE}
 Detection_pvalue <- detectionP(RGset)
-save(Detection_pvalue, file = "./data/processed/Detection_pvalue.RData")
+save(Detection_pvalue, file = "../data/processed/Detection_pvalue.RData")
 Over_Threshold <- Detection_pvalue > 0.05
 head(Over_Threshold)
 table(Over_Threshold)
@@ -236,7 +241,7 @@ M <- getM(MSet.raw)
 beta_df <- data.frame(beta)
 M_df <- data.frame(M)
 
-pheno <- read.csv("data/raw/SampleSheet_Report_II.csv", header = TRUE, stringsAsFactors = TRUE)
+pheno <- read.csv("../data/raw/SampleSheet_Report_II.csv", header = TRUE, stringsAsFactors = TRUE)
 
 SampleSheet$Group
 beta_ctrl <- beta_df[SampleSheet$Group == "CTRL",]
@@ -305,7 +310,7 @@ Preparation of the data.
 ```{r results="hide", message=FALSE, warning=FALSE}
 preprocessNoob_results <- preprocessNoob(RGset)
 beta_preprocessNoob <- getBeta(preprocessNoob_results)
-save(beta_preprocessNoob, file = "./data/processed/beta_preprocessNoob.RData")
+save(beta_preprocessNoob, file = "../data/processed/beta_preprocessNoob.RData")
 ```
 
 Divide normalized beta matrix by probe type and calculate statistics.
@@ -612,7 +617,7 @@ manhattan(input_Manhattan,
           col = rainbow(24))
 ```
 
-## 12. Heatmap
+## STEP 12. Heatmap
 Produce an heatmap of the top 100 significant, differentially methylated probes.
 
 **Define colorbar from phenotype group and custom color palette**
