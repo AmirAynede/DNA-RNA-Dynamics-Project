@@ -1,0 +1,25 @@
+
+% Preamble for DRD Final Report PDF output
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+
+% Better handling of long code lines
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}
+{breaklines, breakanywhere, fontsize=\small, commandchars=\\\{\}}
+
+% Prevent code from overflowing page margins
+\fvset{breaklines=true, breakanywhere=true, fontsize=\small}
+
+% Nicer table captioning
+\captionsetup[table]{skip=10pt}
+
+% Tighten sections a bit
+\titlespacing*{\section}{0pt}{*2}{*1}
+\titlespacing*{\subsection}{0pt}{*2}{*1}
+\titlespacing*{\subsubsection}{0pt}{*2}{*1}
