@@ -82,8 +82,8 @@ targets
 **Create RGChannelSet object**
 ```{r results="hide", message=FALSE, warning=FALSE}
 RGset <- read.metharray.exp(targets = targets)
-save(RGset, file = "RGset_Report.RData")
-load("RGset_Report.RData")
+save(RGset, file = "./data/processed/RGset_Report.RData")
+load("./data/processed/RGset_Report.RData")
 ```
 
 **Explore the RGset object**
@@ -203,7 +203,7 @@ In this case, the negative control signals show intensity values (log2) below 10
 ### c. Calculation of detection p-values
 ```{r message=FALSE, warning=FALSE}
 Detection_pvalue <- detectionP(RGset)
-save(Detection_pvalue, file = "Detection_pvalue.RData")
+save(Detection_pvalue, file = "./data/processed/Detection_pvalue.RData")
 Over_Threshold <- Detection_pvalue > 0.05
 head(Over_Threshold)
 table(Over_Threshold)
@@ -305,7 +305,7 @@ Preparation of the data.
 ```{r results="hide", message=FALSE, warning=FALSE}
 preprocessNoob_results <- preprocessNoob(RGset)
 beta_preprocessNoob <- getBeta(preprocessNoob_results)
-save(beta_preprocessNoob, file = "beta_preprocessNoob.RData")
+save(beta_preprocessNoob, file = "./data/processed/beta_preprocessNoob.RData")
 ```
 
 Divide normalized beta matrix by probe type and calculate statistics.
