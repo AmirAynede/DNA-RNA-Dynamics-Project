@@ -401,7 +401,7 @@ Perform quality checks and provide a brief comment to each step.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-15-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/QCplot-1.pdf}}
 
 \textbf{Comment:} A QC plot displays the distribution of methylated and
 unmethylated signal medians. High median values for both signals
@@ -456,7 +456,7 @@ controls}\label{b.-check-the-intensity-of-negative-controls}
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-16-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/NegativeControlIntesity-1.pdf}}
 
 \textbf{Comment:} In this case, the negative control signals show
 intensity values (log2) below 10 in both the red and green channels,
@@ -682,7 +682,7 @@ subjects and apply the function mean to the 2 subsets).
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-19-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/MethylationValuesDensity-1.pdf}}
 
 \textbf{Comment:} Based on the density plots of mean methylation, no
 clear differences were observed between the control and disease groups.
@@ -844,7 +844,7 @@ corresponds to raw and normalized data, respectively.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-24-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/BetaValuesBoxPlot-1.pdf}}
 
 \textbf{Comment:} preprocessNoob is a normalization method designed to
 correct background fluorescence and dye bias. It is known as a ``light''
@@ -887,7 +887,7 @@ Perform a PCA on the matrix of normalized beta values generated in step
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-25-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/ScreePlotPCA-1.pdf}}
 
 \textbf{Plot PCA by Group}
 
@@ -902,7 +902,7 @@ Perform a PCA on the matrix of normalized beta values generated in step
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-26-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/GroupedPCA-1.pdf}}
 
 \textbf{Comment:} Unfortunately, the PCA analysis does not show a clear
 separation between the control and disease groups. While the control
@@ -923,7 +923,7 @@ across the plot.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-27-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/SexPCA-1.pdf}}
 
 \textbf{Comment:} In this PCA analysis, the female samples cluster
 closely together, with the exception of one outlier (GMS5319609), but
@@ -945,7 +945,7 @@ there is not a clear separation based on sex.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-28-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/SentrixIdPCA-1.pdf}}
 
 \textbf{Comment:} Five batches were identified. The PCA shows
 clustering; however, there are almost as many batches as there are
@@ -1048,7 +1048,7 @@ of 0.05}
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-36-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/PvalDistributions-1.pdf}}
 
 \textbf{Determining the amount of probes that remain after the MTC}
 
@@ -1124,7 +1124,7 @@ Volcano plot to highlight hypermethylated (Delta Beta \textgreater{} 0.1
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-39-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/VolcanoPlot-1.pdf}}
 
 \textbf{b. Manhattan plot}
 
@@ -1153,7 +1153,7 @@ Annotate dataframe with genome annotation for each CpG probe.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-40-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/ManhattanPlot-1.pdf}}
 
 \subsection{STEP 12. Heatmap}\label{step-12.-heatmap}
 
@@ -1192,7 +1192,7 @@ probes.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-42-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/HeatmapCopleteLinkage-1.pdf}}
 
 \textbf{Single linkage}
 
@@ -1216,7 +1216,7 @@ probes.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-43-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/HeatmapSingleLinkage-1.pdf}}
 
 \textbf{Average linkage}
 
@@ -1240,6 +1240,6 @@ probes.
 \end{Highlighting}
 \end{Shaded}
 
-\pandocbounded{\includegraphics[keepaspectratio]{FinalReport_files/figure-latex/unnamed-chunk-44-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{../results/HeatmapAvgLinkage-1.pdf}}
 
 \end{document}
