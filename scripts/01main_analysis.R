@@ -65,6 +65,17 @@ Probe_Info_18756452 <- ProbeInfo_II[ProbeInfo_II$AddressA == "18756452",]
 Red_fluorescences <- Red[rownames(Red) == "18756452",]
 Green_fluorescences <- Green[rownames(Green) == "18756452",]
 
+# Create summary table for probe 18756452
+sample_names <- colnames(Red_fluorescences)
+df_summary_probes <- data.frame(
+  Sample = sample_names,
+  Red_Fluorescence = as.numeric(Red_fluorescences[1, ]),
+  Green_Fluorescence = as.numeric(Green_fluorescences[1, ]),
+  Type = rep("II", length(sample_names)),
+  Color = rep("Both", length(sample_names))
+)
+print(df_summary_probes)
+
 ###### STEP 4: CREATE MSet.raw OBJECT ######
 # Extract methylated and unmethylated signals
 MSet.raw <- preprocessRaw(RGset)
@@ -115,10 +126,19 @@ Over_Threshold <- Detection_pvalue > 0.05
 head(Over_Threshold)
 table(Over_Threshold)
 sum(Over_Threshold)
-paste0(sprintf('There are %s failed probes with a detection p-value higher than 0.05', sum(Over_Threshold)))
+failed_probe_message <- sprintf(
+  "There are %s failed probes with a detection p-value higher than 0.05",
+  sum(Over_Threshold)
+)
 Over_Threshold_Per_Sample <- colSums(Over_Threshold)
 Over_Threshold_Per_Sample
 summary(Over_Threshold)
+failed <- data.frame(
+  Sample = names(Over_Threshold_Per_Sample),
+  n_Failed_Positions = Over_Threshold_Per_Sample
+)
+print(failed)
+print(failed_probe_message)
 
 ###### STEP 6: CALCULATE BETA AND M VALUES, PLOT DENSITIES ######
 beta <- getBeta(MSet.raw)
@@ -143,15 +163,17 @@ mean_of_beta_dis <- apply(beta_dis, 1, mean, na.rm = TRUE)
 mean_of_M_ctrl <- apply(M_ctrl, 1, mean, na.rm = TRUE)
 mean_of_M_dis <- apply(M_dis, 1, mean, na.rm = TRUE)
 
-# Plot density of mean methylation values
-##########need to fix how to put it all in both beta and m in one plot, also the names of the plots
-
-par(mfrow = c(1, 2))
-plot(density(mean_of_beta_ctrl, na.rm = TRUE), main = "Density of Beta Values", col = "black")
-lines(density(mean_of_beta_dis, na.rm = TRUE), col = "orange")
-
-plot(density(mean_of_M_ctrl, na.rm = TRUE), main = "Density of M Values", col = "black")
-lines(density(mean_of_M_dis, na.rm = TRUE), col = "orange")
+# Plot density of mean methylation values with function and legends
+plot_density <- function() {
+  par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))
+  plot(density(mean_of_beta_ctrl, na.rm = TRUE), main = "Density of Beta Values", col = "black", lwd = 2)
+  lines(density(mean_of_beta_dis, na.rm = TRUE), col = "orange", lwd = 2)
+  legend("top", legend = c("CTL", "DIS"), col = c("black", "orange"), lwd = 2, cex = 0.9, bty = "n", inset = c(-0.01, -0.01))
+  plot(density(mean_of_M_ctrl, na.rm = TRUE), main = "Density of M Values", col = "black", lwd = 2)
+  lines(density(mean_of_M_dis, na.rm = TRUE), col = "orange", lwd = 2)
+  legend("topright", legend = c("CTL", "DIS"), col = c("black", "orange"), lwd = 2, cex = 0.9, bty = "n", inset = c(-0.01, -0.01))
+}
+plot_density()
 
 ###### STEP 7: NORMALIZATION WITH preprocessNoob ######
 # Subset beta values by probe type
@@ -214,25 +236,30 @@ pdf("Plot_comparison_raw_preprocessNoob control vs disease.pdf", height = 7, wid
 par(mfrow = c(2, 3))
 plot(d_mean_of_beta_I, col = "blue", main = "raw beta")
 lines(d_mean_of_beta_II, col = "red")
+legend("topright", legend = c("Probe Type I", "Probe Type II"), col = c("blue", "red"), lwd = 2, cex = 0.9, inset = c(0.01, 0.01))
 plot(d_sd_of_beta_I, col = "blue", main = "raw sd")
 lines(d_sd_of_beta_II, col = "red")
+legend("topright", legend = c("Probe Type I", "Probe Type II"), col = c("blue", "red"), lwd = 2, cex = 0.9, inset = c(0.01, 0.01))
 boxplot(beta,
         las = 2,
         col = c("green", "magenta")[pheno$Group],
         ylab = 'Beta values',
         xlab = 'Samples',
         main = 'Boxplot of Beta Values')
-
+legend("bottom", legend = c("Control", "Disease"), fill = c("green", "magenta"), horiz = TRUE, bty = 'n', inset = -0.25, xpd = TRUE, cex = 0.9)
 plot(d_mean_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob beta")
 lines(d_mean_of_beta_preprocessNoob_II, col = "red")
+legend("topright", legend = c("Probe Type I", "Probe Type II"), col = c("blue", "red"), lwd = 2, cex = 0.9, inset = c(0.01, 0.01))
 plot(d_sd_of_beta_preprocessNoob_I, col = "blue", main = "preprocessNoob sd")
 lines(d_sd_of_beta_preprocessNoob_II, col = "red")
+legend("topright", legend = c("Probe Type I", "Probe Type II"), col = c("blue", "red"), lwd = 2, cex = 0.9, inset = c(0.01, 0.01))
 boxplot(beta_preprocessNoob,
         las = 2,
         col = c("green", "magenta")[pheno$Group],
         ylab = 'Beta values',
         xlab = 'Samples',
         main = 'Boxplot of Normalised Beta Values')
+legend("bottom", legend = c("Control", "Disease"), fill = c("green", "magenta"), horiz = TRUE, bty = 'n', inset = -0.25, xpd = TRUE, cex = 0.9)
 dev.off()
 
 ###### STEP 8: PCA ANALYSIS ######
@@ -343,44 +370,98 @@ mean_beta_first_ctrl <- apply(beta_first_ctrl, 1, mean)
 beta_first_dis <- beta_first[, pheno$Group == "DIS"]
 mean_beta_first_dis <- apply(beta_first_dis, 1, mean)
 delta_first <- mean_beta_first_dis - mean_beta_first_ctrl
-toVolcPlot <- data.frame(delta_first, -log10(final_ttest_corrected$pValues_ttest))
-plot(toVolcPlot[, 1], toVolcPlot[, 2])
-
-# Highlight significant probes in volcano plot
-pdf("Volcano_plot.pdf")
-plot(toVolcPlot[, 1], toVolcPlot[, 2], pch = 16, cex = 0.5, main = 'volcano plot')
-toHighlight <- toVolcPlot[toVolcPlot[, 1] > 0.1 & toVolcPlot[, 2] > (-log10(0.05)), ]
-points(toHighlight[, 1], toHighlight[, 2], pch = 16, cex = 0.7, col = "red")
-dev.off()
+toVolcPlot <- data.frame(delta_beta = delta_first, negLog10p = -log10(final_ttest_corrected$pValues_ttest))
+plot(toVolcPlot$delta_beta, toVolcPlot$negLog10p,
+     pch = 16, cex = 0.5,
+     xlab = "Delta Beta (DIS - CTRL)",
+     ylab = "-log10(p-value)",
+     main = "Volcano Plot of Methylation Differences")
+hyper <- which(toVolcPlot$delta_beta > 0.1 & final_ttest_corrected$pValues_ttest < 0.05)
+points(toVolcPlot$delta_beta[hyper],
+       toVolcPlot$negLog10p[hyper],
+       col = "red", pch = 16, cex = 0.6)
+hypo <- which(toVolcPlot$delta_beta < -0.1 & final_ttest_corrected$pValues_ttest < 0.05)
+points(toVolcPlot$delta_beta[hypo],
+       toVolcPlot$negLog10p[hypo],
+       col = "blue", pch = 16, cex = 0.6)
+abline(h = -log10(0.05), col = "darkgray", lty = 2)  # p = 0.05
+abline(v = c(-0.1, 0.1), col = "darkgray", lty = 2)  # Delta Beta = ±0.1
+legend("topright", legend = c("Hypermethylated", "Hypomethylated"),
+       col = c("red", "blue"), pch = 16, bty = "n")
 
 # Manhattan plot
 install.packages("qqman")
 library(qqman)
 # (During the lesson, the object final_ttest_corrected was prepared on a subset of probes)
 # Annotate dataframe with genome annotation for each CpG probe
-load('~/Dropbox/DRD_2025/2/Illumina450Manifest_clean.RData')
 final_ttest_corrected <- data.frame(rownames(final_ttest_corrected), final_ttest_corrected)
 colnames(final_ttest_corrected)[1] <- "IlmnID"
-final_ttest_corrected_annotated <- merge(final_ttest_corrected, Illumina450Manifest_clean, by = "IlmnID")
+final_ttest_corrected_clean <- final_ttest_corrected[, !duplicated(colnames(final_ttest_corrected))]
+final_ttest_corrected_annotated <- merge(final_ttest_corrected_clean, Illumina450Manifest_clean, by = "IlmnID")
 input_Manhattan <- final_ttest_corrected_annotated[colnames(final_ttest_corrected_annotated) %in% c("IlmnID", "CHR", "MAPINFO", "pValues_ttest")]
 order_chr <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y")
 input_Manhattan$CHR <- factor(input_Manhattan$CHR, levels = order_chr)
 input_Manhattan$CHR <- as.numeric(input_Manhattan$CHR)
-manhattan(input_Manhattan, snp = "IlmnID", chr = "CHR", bp = "MAPINFO", p = "pValues_ttest")
+manhattan(input_Manhattan, 
+          snp = "IlmnID", 
+          chr = "CHR", 
+          bp = "MAPINFO", 
+          p = "pValues_ttest", 
+          annotatePval = 0.00001, 
+          col = rainbow(24))
 pdf("Manhattan_plot.pdf")
 manhattan(input_Manhattan, snp = "IlmnID", chr = "CHR", bp = "MAPINFO", p = "pValues_ttest", annotatePval = 0.00001, col = rainbow(24))
 dev.off()
 
 ###### STEP 12: HEATMAP OF TOP 100 PROBES ######
 library(gplots)
-colorbar <- c("green", "orange", "orange", "green", "orange", "orange", "green", "green")
+colorbar <- as.character(factor(pheno$Group, labels = c("royalblue", "orange")))
 input_heatmap = as.matrix(final_ttest[1:100, 1:8])
-# Complete linkage (default)
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Complete linkage")
+col2 = colorRampPalette(c("green", "black", "red"))(100)
+# Complete linkage
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Complete Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
 # Single linkage
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, hclustfun = function(x) hclust(x, method = 'single'), dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Single linkage")
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          hclustfun = function(x) hclust(x, method = "single"),
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Single Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
 # Average linkage
-heatmap.2(input_heatmap, col = terrain.colors(100), Rowv = TRUE, Colv = TRUE, hclustfun = function(x) hclust(x, method = 'average'), dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE, main = "Average linkage")
+heatmap.2(input_heatmap,
+          col = col2,
+          Rowv = TRUE,
+          Colv = TRUE,
+          hclustfun = function(x) hclust(x, method = "average"),
+          dendrogram = "both",
+          key = TRUE,
+          ColSideColors = colorbar,
+          density.info = "none",
+          trace = "none",
+          scale = "none",
+          symm = FALSE,
+          main = "Average Linkage")
+legend("topright", legend = c("CTRL", "DIS"), fill = c("royalblue", "orange"), border = NA, bty = "n", cex = 0.8, xpd = TRUE, inset = c(0, -0.10))
 # Custom color palette
 col2 = colorRampPalette(c("green", "black", "red"))(100)
 heatmap.2(input_heatmap, col = col2, Rowv = TRUE, Colv = TRUE, dendrogram = "both", key = TRUE, ColSideColors = colorbar, density.info = "none", trace = "none", scale = "none", symm = FALSE)
