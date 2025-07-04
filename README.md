@@ -8,11 +8,10 @@
 [![PDF Report](https://img.shields.io/badge/report-pdf-green.svg)](docs/FinalReport.pdf)
 [![Results](https://img.shields.io/badge/results-up--to--date-brightgreen.svg)](results/)
 [![Reproducible](https://img.shields.io/badge/reproducibility-yes-success.svg)](README.md)
+[![R-CMD-check](https://github.com/kianinsilico/DRD_2025_Project/actions/workflows/r-cmd-check.yaml/badge.svg)](https://github.com/kianinsilico/DRD_2025_Project/actions/workflows/r-cmd-check.yaml)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/license-CC--BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Last Commit](https://img.shields.io/github/last-commit/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/commits/main)
 [![R >= 4.0](https://img.shields.io/badge/R-%3E=4.0-blue.svg)](https://cran.r-project.org/)
-[![Issues](https://img.shields.io/github/issues/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/issues)
-[![Issues Closed](https://img.shields.io/github/issues-closed/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/issues?q=is%3Aissue+is%3Aclosed)
 
 **Comprehensive Analysis of DNA Methylation Using the Illumina HumanMethylation450 BeadChip Platform**
 
