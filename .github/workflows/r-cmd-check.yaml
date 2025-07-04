@@ -1,0 +1,43 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev pandoc texlive-xetex texlive-fonts-recommended texlive-plain-generic
+      - name: Install R package dependencies
+        run: |
+          Rscript -e 'install.packages(c("BiocManager", "gplots", "qqman", "tinytex"))'
+          Rscript -e 'BiocManager::install(c("minfi", "minfiData", "sva", "shinyMethyl", "IlluminaHumanMethylation450kmanifest", "IlluminaHumanMethylation450kanno.ilmn12.hg19", "AnnotationDbi"), ask=FALSE)'
+          Rscript -e 'install.packages("./lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)'
+      - name: Check R scripts
+        run: |
+          Rscript -e 'lintr::lint_dir("scripts")'
+      - name: Render HTML report
+        run: |
+          Rscript -e 'rmarkdown::render("docs/FinalReport.Rmd", output_format = "html_document")'
+      - name: Render PDF report
+        run: |
+          Rscript -e 'rmarkdown::render("docs/FinalReport.Rmd", output_format = "pdf_document")'
+      - name: Upload HTML report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FinalReport-html
+          path: docs/FinalReport.html
+      - name: Upload PDF report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FinalReport-pdf
+          path: docs/FinalReport.pdf
