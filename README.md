@@ -1,4 +1,18 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/DRD_2025_Project-DNA%20Methylation%20Pipeline-blueviolet?style=for-the-badge&logo=dna&logoColor=white" alt="DRD_2025_Project Logo" />
+</p>
+
 # DRD_2025_Project
+
+[![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](docs/FinalReport.html)
+[![PDF Report](https://img.shields.io/badge/report-pdf-green.svg)](docs/FinalReport.pdf)
+[![Results](https://img.shields.io/badge/results-up--to--date-brightgreen.svg)](results/)
+[![Reproducible](https://img.shields.io/badge/reproducibility-yes-success.svg)](README.md)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/license-CC--BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Last Commit](https://img.shields.io/github/last-commit/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/commits/main)
+[![R >= 4.0](https://img.shields.io/badge/R-%3E=4.0-blue.svg)](https://cran.r-project.org/)
+[![Issues](https://img.shields.io/github/issues/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/issues)
+[![Issues Closed](https://img.shields.io/github/issues-closed/kianinsilico/DRD_2025_Project.svg)](https://github.com/kianinsilico/DRD_2025_Project/issues?q=is%3Aissue+is%3Aclosed)
 
 **Comprehensive Analysis of DNA Methylation Using the Illumina HumanMethylation450 BeadChip Platform**
 
@@ -42,15 +56,18 @@ DRD_2025_Project/
 ├── data/                # Raw and processed data files
 │   ├── raw/             # Raw .idat files and sample sheet
 │   └── processed/       # RData files generated during analysis
-├── docs/                # Project report (Rmd, HTML, PDF)
+├── docs/                # Project report, documentation, and [README](docs/README.md)
 ├── scripts/             # R scripts for setup and analysis
-├── results/             # Output results and figures
+├── results/             # Output results, figures, and [README](results/README.md)
 ├── lib/                 # Local R package tarballs (e.g., SummarizedExperiment)
 ├── .gitignore           # Git ignore rules
 ├── LICENSE              # License file
 ├── CITATION.cff         # Citation file
 └── README.md            # This file
 ```
+
+- See [`docs/README.md`](docs/README.md) for details on documentation and reports.
+- See [`results/README.md`](results/README.md) for details on results and figures.
 
 ---
 
@@ -81,15 +98,16 @@ DRD_2025_Project/
    ```
 
 4. **Run the analysis:**
-   - Follow the steps in `docs/FinalReport.Rmd` or run the scripts in `scripts/` as needed.
-   - Output and figures will be saved in `results/` and `docs/`.
+   - Follow the steps in [`docs/FinalReport.Rmd`](docs/FinalReport.Rmd) or run the scripts in `scripts/` as needed.
+   - Output and figures will be saved in [`results/`](results/) and [`docs/`](docs/).
 
 ---
 
-## Report
+## Report & Results
 
-The full project report, including methods, code, figures, and interpretation, can be found here:
-👉 [FinalReport.html](./docs/FinalReport.html)
+- 📄 **HTML Report:** [docs/FinalReport.html](docs/FinalReport.html)
+- 📄 **PDF Report:** [docs/FinalReport.pdf](docs/FinalReport.pdf)
+- 📊 **Results & Figures:** [results/](results/)
 
 ---
 
