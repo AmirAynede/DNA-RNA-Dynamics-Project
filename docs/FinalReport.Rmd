@@ -4,10 +4,6 @@ author: Keshani, K., Castro Vargas, P., Gustini, B., Aynede, A., Dobrokhotov, I.
   & Otoijamun, F.
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    toc: true
-    toc_depth: '3'
-    df_print: paged
   pdf_document:
     toc: true
     toc_depth: 3
@@ -17,6 +13,10 @@ output:
     includes:
       in_header: preamble.tex
     fig_caption: true
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
 fontsize: 11pt
 geometry: margin=1in
 mainfont: Times New Roman
