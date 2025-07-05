@@ -20,7 +20,7 @@ output:
 fontsize: 11pt
 geometry: margin=1in
 mainfont: "TeX Gyre Termes"
-monofont: Courier New
+monofont: "DejaVu Sans Mono"
 ---
 
 
