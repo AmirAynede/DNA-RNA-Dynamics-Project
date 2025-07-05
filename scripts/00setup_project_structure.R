@@ -30,10 +30,9 @@ if (!file.exists(".gitignore")) {
   ), ".gitignore")
 }
 
-
 # Create an empty R project file (if not already created from RStudio)
 if (!file.exists("DRD_2025_Project.Rproj")) {
-  fileConn <- file("DRD_2025_Project.Rproj")
+  file_conn <- file("DRD_2025_Project.Rproj")
   writeLines(c(
     "Version: 1.0",
     "",
@@ -48,6 +47,6 @@ if (!file.exists("DRD_2025_Project.Rproj")) {
     "",
     "RnwWeave: knitr",
     "LaTeX: pdfLaTeX"
-  ), fileConn)
-  close(fileConn)
+  ), file_conn)
+  close(file_conn)
 }
