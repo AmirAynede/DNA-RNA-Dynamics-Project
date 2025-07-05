@@ -19,7 +19,7 @@ output:
     df_print: paged
 fontsize: 11pt
 geometry: margin=1in
-mainfont: Times New Roman
+mainfont: "TeX Gyre Termes"
 monofont: Courier New
 ---
 
