@@ -19,7 +19,7 @@ jobs:
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev pandoc texlive-xetex texlive-fonts-recommended texlive-plain-generic
       - name: Install R package dependencies
         run: |
-          Rscript -e 'install.packages(c("BiocManager", "gplots", "qqman", "tinytex", "lintr"))'
+          Rscript -e 'install.packages(c("BiocManager", "gplots", "qqman", "tinytex", "lintr", "rmarkdown"))'
           Rscript -e 'BiocManager::install(c("minfi", "minfiData", "sva", "shinyMethyl", "IlluminaHumanMethylation450kmanifest", "IlluminaHumanMethylation450kanno.ilmn12.hg19", "AnnotationDbi"), ask=FALSE)'
           Rscript -e 'install.packages("./lib/SummarizedExperiment_1.38.0.tar.gz", repos = NULL)'
       - name: Check R scripts
