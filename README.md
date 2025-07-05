@@ -123,6 +123,19 @@ As part of the course *DNA/RNA Dynamics*, University of Bologna (2025).
 
 ---
 
+## Related Analyses by Other Groups
+
+As part of a collaborative project for the *DNA/RNA Dynamics* course at the University of Bologna (2025), each group was assigned different methods or parameters for DNA methylation analysis.
+
+To explore alternative approaches and complementary results, see the repository of **Group 5**, who applied the **Mann-Whitney test** and used **preprocessNoob** for normalization:
+
+- 🔗 [Group 5 – Luca Cagnini’s Team](https://github.com/LucaCagnini/DNA-RNA_Project)
+
+More links to other groups’ repositories will be added here as they become available.
+
+
+---
+
 ## License
 
 [LICENSE](./LICENSE)
