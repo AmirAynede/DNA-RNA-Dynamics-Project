@@ -3,8 +3,16 @@ name: R-CMD-check
 on:
   push:
     branches: [main]
+    paths:
+      - '**.R'
+      - '**.Rmd'
+      - '.github/workflows/*.yaml'
   pull_request:
     branches: [main]
+    paths:
+      - '**.R'
+      - '**.Rmd'
+      - '.github/workflows/*.yaml'
 
 jobs:
   R-CMD-check:
