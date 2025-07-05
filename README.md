@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/DRD_2025_Project-DNA%20Methylation%20Pipeline-blueviolet?style=for-the-badge&logo=dna&logoColor=white" alt="DRD_2025_Project Logo" />
+  <img src="docs/banner.png" alt="DNA Methylation Analysis 2025 Banner" style="width:100%;max-width:800px;">
 </p>
 
 # DRD_2025_Project
