@@ -121,6 +121,38 @@ DRD_2025_Project/
 
 As part of the course *DNA/RNA Dynamics*, University of Bologna (2025).
 
+## License and Use
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.  
+See the full terms in the [LICENSE.txt](./LICENSE.txt) file.
+
+**Summary**:
+- You may use, adapt, and redistribute the material for academic purposes.
+- You may not use it commercially.
+- You must give appropriate credit and cite the authors.
+
+---
+
+## Citation Requirement
+
+If you use this project (in whole or in part), you **must** cite it as follows:
+
+> Keshani K, Castro Vargas P, Gustini B, MohammadNejad Aynede A, Dobrokhotov I, Otoijamun F.  
+> *DRD_2025_Project: Educational pipeline for DNA methylation analysis*.  
+> University of Bologna, 2025.  
+> GitHub: https://github.com/kianinsilico/DRD_2025_Project
+
+If you're unsure how to cite this work, please contact the authors via GitHub Issues.
+
+---
+
+## Academic Integrity Statement
+
+This project was created by the above authors as part of a university-assigned team effort.  
+Any reposting, modification, or reuse of this repository without proper attribution is considered a breach of the license and may constitute academic plagiarism.
+
+We actively monitor the project’s use online. Reposting without citation, especially under a different name, will be reported to GitHub and the University of Bologna.
+
 ---
 
 ## Related Analyses by Other Groups
@@ -137,12 +169,6 @@ To explore alternative approaches and complementary results, see the repositorie
 
 More links to other groups’ repositories will be added here as they become available.
 
-
----
-
-## License
-
-[LICENSE](./LICENSE)
 
 ---
 
